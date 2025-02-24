@@ -1,19 +1,31 @@
 {
   "name": "target-process-docs",
   "version": "1.0.0",
-  "description": "",
+  "description": "Scrapes Target Process documentation and provides searchable local markdown files with SQLite FTS indexing",
   "main": "index.js",
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node scrape.js"
+    "start": "node scrape.js",
+    "build-search": "node build-search-db.js"
   },
-  "keywords": [],
+  "keywords": ["documentation", "markdown", "search", "sqlite", "fts"],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "cheerio": "^1.0.0",
     "got": "^14.4.6",
-    "node-html-markdown": "^1.3.0"
+    "node-html-markdown": "^1.3.0",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.7"
+  },
+  "optionalDependencies": {
+    "jq-linux-x64": "^1.7.1",
+    "jq-win32-x64": "^1.7.1",
+    "jq-darwin-x64": "^1.7.1",
+    "jq-darwin-arm64": "^1.7.1",
+    "glow-linux-x64": "^1.5.1",
+    "glow-darwin-x64": "^1.5.1",
+    "glow-darwin-arm64": "^1.5.1"
   }
 }

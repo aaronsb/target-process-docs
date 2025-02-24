@@ -10,3 +10,6 @@ package-lock.json
 
 # Editor files
 .obsidian/
+
+# SQLite database
+docs.db

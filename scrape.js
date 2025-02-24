@@ -61,8 +61,29 @@ async function fetchAndConvert(url) {
 // Keep track of processed URLs to avoid duplicates
 const processedUrls = new Set();
 
+// Write metadata file with scrape timestamp
+async function writeMetadata() {
+    const metadata = {
+        lastScraped: new Date().toISOString(),
+        baseUrl: baseUrl,
+        totalDocuments: processedUrls.size
+    };
+    
+    await fs.writeFile(
+        'docs/metadata.json',
+        JSON.stringify(metadata, null, 2)
+    );
+    
+    console.log(`\nLast scraped: ${metadata.lastScraped}`);
+    console.log(`Total documents: ${metadata.totalDocuments}`);
+    console.log('\nNote: Please consider waiting between documentation updates to avoid unnecessary load on the server.');
+}
+
 // Start scraping
 console.log('Starting documentation scraping...');
 fetchAndConvert('https://dev.targetprocess.com/docs/overview')
-    .then(() => console.log('Scraping complete!'))
+    .then(async () => {
+        console.log('Scraping complete!');
+        await writeMetadata();
+    })
     .catch(console.error);
