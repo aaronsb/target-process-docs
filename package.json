@@ -11,7 +11,7 @@
   },
   "keywords": ["documentation", "markdown", "search", "sqlite", "fts"],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "cheerio": "^1.0.0",
     "got": "^14.4.6",
