@@ -1,0 +1,9 @@
+# Scraped documentation
+docs/
+
+# Dependencies
+node_modules/
+package-lock.json
+
+# OS files
+.DS_Store
