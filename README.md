@@ -1,17 +1,20 @@
-1
 # Target Process Documentation Scraper
 
-This tool scrapes the Target Process documentation from https://dev.targetprocess.com/docs and converts it to a local markdown documentation repository with full-text search capabilities.
+This tool is designed to help automated code agents write better software by providing local, searchable access to Target Process documentation. By converting the documentation from https://dev.targetprocess.com/docs into a markdown repository with full-text search capabilities, it enables AI agents to quickly look up and reference Target Process concepts, APIs, and best practices while writing code.
 
 ## Features
 
-- Converts HTML documentation to Markdown format
-- Maintains original documentation structure
-- Preserves internal links and references
-- Handles errors gracefully
-- Full-text search with SQLite FTS5
-- Tracks document relationships through internal links
-- Colored search result highlighting
+- Optimized for AI code agents:
+  - Markdown format for easy parsing and understanding
+  - Fast full-text search with SQLite FTS5
+  - Structured documentation with preserved relationships
+  - Local access for quick reference during development
+- Additional features:
+  - Maintains original documentation structure
+  - Preserves internal links and references
+  - Handles errors gracefully
+  - Tracks document relationships through internal links
+  - Colored search result highlighting
 
 ## Setup
 
