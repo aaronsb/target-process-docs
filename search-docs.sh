@@ -89,8 +89,8 @@ if [ ! -z "$best_match" ]; then
     echo -e "\033[1;34m$(pwd)/docs/$path\033[0m"
     echo -e "\033[1m$title\033[0m"
     echo
-    head -n 20 "docs/$path"
-    echo -e "\n[...]\n"
+    cat "docs/$path"
+    echo
 fi
 
 echo "----------------------------------------"
