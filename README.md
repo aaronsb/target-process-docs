@@ -23,7 +23,7 @@ npm install
 3. System Requirements:
    - sqlite3: Required for search functionality
    - jq: Required for JSON processing (installed automatically via npm)
-   - mdcat: Optional, recommended for enhanced markdown rendering
+   - glow: Optional, recommended for enhanced markdown rendering (installed automatically via npm)
 
 ## Usage
 
@@ -83,24 +83,14 @@ Note: All generated files are git-ignored - you'll need to run the scraper to po
 
 Search results are displayed directly in the terminal:
 
-1. With `mdcat` (recommended):
+1. With `glow` (recommended):
    - Terminal-optimized markdown rendering
    - Link highlighting
    - List formatting
    - Table support
-   - Install via:
-     ```bash
-     # macOS
-     brew install mdcat
+   - Installed automatically via npm dependencies
 
-     # Ubuntu/Debian
-     cargo install mdcat  # requires Rust
-
-     # Arch Linux
-     pacman -S mdcat
-     ```
-
-2. Without `mdcat`:
+2. Without `glow`:
    - Plain text display
    - Basic markdown readability
    - No special formatting
