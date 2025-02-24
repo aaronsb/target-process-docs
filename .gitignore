@@ -7,3 +7,6 @@ package-lock.json
 
 # OS files
 .DS_Store
+
+# Editor files
+.obsidian/
