@@ -10,25 +10,102 @@ async function initializeDb() {
         driver: sqlite3.Database
     });
 
-    // Create tables
+    // Drop existing tables
+    await db.exec(`DROP TABLE IF EXISTS docs;`);
+    await db.exec(`DROP TABLE IF EXISTS sections;`);
+    await db.exec(`DROP TABLE IF EXISTS relationships;`);
+
+    // Create tables with improved schema
     await db.exec(`
-        CREATE VIRTUAL TABLE IF NOT EXISTS docs USING fts5(
-            path,
-            content,
-            title,
-            tags
+        CREATE VIRTUAL TABLE docs USING fts5(
+            path,              -- File path relative to docs directory
+            content,           -- Full document content
+            title,            -- Document title
+            tags,             -- Document tags
+            section_path      -- Full section path (e.g., "Introduction > Getting Started")
         );
 
-        CREATE TABLE IF NOT EXISTS relationships (
+        CREATE VIRTUAL TABLE sections USING fts5(
+            doc_path,         -- Reference to parent document
+            section_id,       -- Unique section identifier
+            title,            -- Section title
+            content,          -- Section content
+            level,            -- Header level (1-6)
+            parent_id,        -- Parent section ID
+            section_path      -- Full section path
+        );
+
+        CREATE TABLE relationships (
             source_id TEXT,
             target_id TEXT,
-            relationship_type TEXT,
-            FOREIGN KEY(source_id) REFERENCES docs(path),
-            FOREIGN KEY(target_id) REFERENCES docs(path)
+            relationship_type TEXT
         );
     `);
 
     return db;
+}
+
+// Extract sections from markdown content
+function extractSections(content) {
+    const sections = [];
+    const lines = content.split('\n');
+    let currentSection = {
+        title: '',
+        content: [],
+        level: 0,
+        parent_id: null,
+        section_path: []
+    };
+    
+    const headerRegex = /^(#{1,6})\s+(.+)$/;
+    const sectionStack = [];
+    
+    for (const line of lines) {
+        const headerMatch = line.match(headerRegex);
+        
+        if (headerMatch) {
+            // Save previous section if it exists
+            if (currentSection.content.length > 0) {
+                sections.push({
+                    ...currentSection,
+                    content: currentSection.content.join('\n'),
+                    section_path: currentSection.section_path.join(' > ')
+                });
+            }
+            
+            const level = headerMatch[1].length;
+            const title = headerMatch[2].trim();
+            
+            // Update section stack
+            while (sectionStack.length > 0 && sectionStack[sectionStack.length - 1].level >= level) {
+                sectionStack.pop();
+            }
+            
+            // Create new section
+            currentSection = {
+                title,
+                content: [],
+                level,
+                parent_id: sectionStack.length > 0 ? sectionStack[sectionStack.length - 1].title : null,
+                section_path: [...sectionStack.map(s => s.title), title]
+            };
+            
+            sectionStack.push({ title, level });
+        } else {
+            currentSection.content.push(line);
+        }
+    }
+    
+    // Add final section
+    if (currentSection.content.length > 0) {
+        sections.push({
+            ...currentSection,
+            content: currentSection.content.join('\n'),
+            section_path: currentSection.section_path.join(' > ')
+        });
+    }
+    
+    return sections;
 }
 
 // Extract title from markdown content
@@ -60,17 +137,41 @@ function findInternalLinks(content) {
 // Process a single markdown file
 async function processFile(db, filePath) {
     const content = await fs.readFile(filePath, 'utf-8');
+    const stats = await fs.stat(filePath);
     const relativePath = path.relative('docs', filePath);
     const title = extractTitle(content);
     const links = findInternalLinks(content);
+    const sections = extractSections(content);
 
-    // Insert document
+    // Insert main document
     await db.run(
-        'INSERT INTO docs (path, content, title, tags) VALUES (?, ?, ?, ?)',
-        [relativePath, content, title, '']
+        'INSERT INTO docs (path, content, title, tags, section_path) VALUES (?, ?, ?, ?, ?)',
+        [
+            relativePath,
+            content,
+            title,
+            '',
+            sections.map(s => s.title).join(' > ')
+        ]
     );
 
-    // Insert relationships for internal links
+    // Insert sections
+    for (const section of sections) {
+        await db.run(
+            'INSERT INTO sections (doc_path, section_id, title, content, level, parent_id, section_path) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [
+                relativePath,
+                `${relativePath}#${section.title.toLowerCase().replace(/\s+/g, '-')}`,
+                section.title,
+                section.content,
+                section.level,
+                section.parent_id,
+                section.section_path
+            ]
+        );
+    }
+
+    // Insert relationships
     for (const link of links) {
         await db.run(
             'INSERT INTO relationships (source_id, target_id, relationship_type) VALUES (?, ?, ?)',
@@ -103,6 +204,9 @@ async function main() {
     try {
         console.log('Initializing search database...');
         const db = await initializeDb();
+
+        // Clear existing data
+        await db.exec('DELETE FROM docs; DELETE FROM sections; DELETE FROM relationships;');
 
         console.log('Processing markdown files...');
         await processAllFiles(db);
