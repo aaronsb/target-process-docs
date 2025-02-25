@@ -80,6 +80,10 @@ Visualize the documentation structure and relationships in an interactive 3D gra
 ./visualize-docs.sh [OPTIONS]
 ```
 
+![Documentation Graph Visualization](images/node-graph.png)
+
+*3D visualization showing document clusters connected by category relationships*
+
 Options:
 - `--db <path>`: Path to SQLite database file (default: docs.db)
 - `--port <number>`: Port to run the server on (default: 8080)
