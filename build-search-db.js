@@ -14,6 +14,8 @@ async function initializeDb() {
     await db.exec(`DROP TABLE IF EXISTS docs;`);
     await db.exec(`DROP TABLE IF EXISTS sections;`);
     await db.exec(`DROP TABLE IF EXISTS relationships;`);
+    await db.exec(`DROP TABLE IF EXISTS keywords;`);
+    await db.exec(`DROP TABLE IF EXISTS node_keywords;`);
 
     // Create tables with improved schema
     await db.exec(`
@@ -40,6 +42,23 @@ async function initializeDb() {
             target_id TEXT,
             relationship_type TEXT
         );
+        
+        CREATE TABLE keywords (
+            id INTEGER PRIMARY KEY,
+            term TEXT UNIQUE,
+            category TEXT,
+            weight INTEGER DEFAULT 1
+        );
+        
+        CREATE TABLE node_keywords (
+            node_id TEXT,
+            keyword_id INTEGER,
+            count INTEGER DEFAULT 1,
+            FOREIGN KEY (keyword_id) REFERENCES keywords(id)
+        );
+        
+        CREATE INDEX idx_node_keywords ON node_keywords(node_id, keyword_id);
+        CREATE INDEX idx_keywords_category ON keywords(category);
     `);
 
     return db;
@@ -134,50 +153,32 @@ function findInternalLinks(content) {
     return links;
 }
 
-// Process a single markdown file
-async function processFile(db, filePath) {
-    const content = await fs.readFile(filePath, 'utf-8');
-    const stats = await fs.stat(filePath);
-    const relativePath = path.relative('docs', filePath);
-    const title = extractTitle(content);
-    const links = findInternalLinks(content);
-    const sections = extractSections(content);
+// Define keyword categories and their associated terms - simplified for performance
+const keywordCategories = {
+    'User Management': [
+        'user', 'group', 'permission', 'role', 'access', 'account', 'member', 'team'
+    ],
+    'Integration': [
+        'api', 'rest', 'webhook', 'workato', 'zapier', 'integration', 'service', 'endpoint'
+    ],
+    'Process Control': [
+        'workflow', 'automation', 'rule', 'trigger', 'process', 'flow', 'action', 'event'
+    ],
+    'Data Management': [
+        'field', 'entity', 'custom field', 'metric', 'data', 'attribute', 'property', 'value'
+    ],
+    'UI Components': [
+        'view', 'board', 'dashboard', 'report', 'chart', 'graph', 'visualization', 'interface'
+    ],
+    'System': [
+        'setting', 'configuration', 'setup', 'system', 'admin', 'management', 'environment', 'server'
+    ]
+};
 
-    // Insert main document
-    await db.run(
-        'INSERT INTO docs (path, content, title, tags, section_path) VALUES (?, ?, ?, ?, ?)',
-        [
-            relativePath,
-            content,
-            title,
-            '',
-            sections.map(s => s.title).join(' > ')
-        ]
-    );
-
-    // Insert sections
-    for (const section of sections) {
-        await db.run(
-            'INSERT INTO sections (doc_path, section_id, title, content, level, parent_id, section_path) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            [
-                relativePath,
-                `${relativePath}#${section.title.toLowerCase().replace(/\s+/g, '-')}`,
-                section.title,
-                section.content,
-                section.level,
-                section.parent_id,
-                section.section_path
-            ]
-        );
-    }
-
-    // Insert relationships
-    for (const link of links) {
-        await db.run(
-            'INSERT INTO relationships (source_id, target_id, relationship_type) VALUES (?, ?, ?)',
-            [relativePath, link.target, 'link']
-        );
-    }
+// Prepare regex patterns for each category (for faster matching)
+const categoryPatterns = {};
+for (const [category, terms] of Object.entries(keywordCategories)) {
+    categoryPatterns[category] = new RegExp('\\b(' + terms.join('|') + ')\\b', 'gi');
 }
 
 // Process all markdown files in the docs directory
@@ -186,17 +187,173 @@ async function processAllFiles(db) {
     const markdownFiles = files.filter(file => file.endsWith('.md'));
 
     console.log(`Found ${markdownFiles.length} markdown files to process...`);
-
+    
+    // Prepare batch arrays
+    const docsToInsert = [];
+    const sectionsToInsert = [];
+    const relationshipsToInsert = [];
+    const keywordsToProcess = [];
+    
+    // Process each file
     for (const file of markdownFiles) {
         const filePath = path.join('docs', file);
         try {
-            await processFile(db, filePath);
+            const content = await fs.readFile(filePath, 'utf-8');
+            const relativePath = path.relative('docs', filePath);
+            const title = extractTitle(content);
+            const links = findInternalLinks(content);
+            const sections = extractSections(content);
+            
+            // Add document to batch
+            docsToInsert.push({
+                path: relativePath,
+                content: content,
+                title: title,
+                tags: '',
+                section_path: sections.map(s => s.title).join(' > ')
+            });
+            
+            // Extract document keywords
+            const docCategories = extractCategories(content);
+            keywordsToProcess.push({
+                nodeId: relativePath,
+                categories: docCategories
+            });
+            
+            // Process sections
+            for (const section of sections) {
+                const sectionId = `${relativePath}#${section.title.toLowerCase().replace(/\s+/g, '-')}`;
+                
+                // Add section to batch
+                sectionsToInsert.push({
+                    doc_path: relativePath,
+                    section_id: sectionId,
+                    title: section.title,
+                    content: section.content,
+                    level: section.level,
+                    parent_id: section.parent_id,
+                    section_path: section.section_path
+                });
+                
+                // Extract section keywords
+                const sectionCategories = extractCategories(section.title + ' ' + section.content);
+                keywordsToProcess.push({
+                    nodeId: sectionId,
+                    categories: sectionCategories
+                });
+            }
+            
+            // Add relationships to batch
+            for (const link of links) {
+                relationshipsToInsert.push({
+                    source_id: relativePath,
+                    target_id: link.target,
+                    relationship_type: 'link'
+                });
+            }
+            
             process.stdout.write('.');
         } catch (error) {
             console.error(`\nError processing ${file}:`, error);
         }
     }
+    
+    console.log('\nInserting data into database...');
+    
+    // Begin transaction for better performance
+    await db.exec('BEGIN TRANSACTION');
+    
+    try {
+        // Insert documents
+        const docStmt = await db.prepare('INSERT INTO docs (path, content, title, tags, section_path) VALUES (?, ?, ?, ?, ?)');
+        for (const doc of docsToInsert) {
+            await docStmt.run(doc.path, doc.content, doc.title, doc.tags, doc.section_path);
+        }
+        await docStmt.finalize();
+        
+        // Insert sections
+        const sectionStmt = await db.prepare('INSERT INTO sections (doc_path, section_id, title, content, level, parent_id, section_path) VALUES (?, ?, ?, ?, ?, ?, ?)');
+        for (const section of sectionsToInsert) {
+            await sectionStmt.run(
+                section.doc_path, 
+                section.section_id, 
+                section.title, 
+                section.content, 
+                section.level, 
+                section.parent_id, 
+                section.section_path
+            );
+        }
+        await sectionStmt.finalize();
+        
+        // Insert relationships
+        const relStmt = await db.prepare('INSERT INTO relationships (source_id, target_id, relationship_type) VALUES (?, ?, ?)');
+        for (const rel of relationshipsToInsert) {
+            await relStmt.run(rel.source_id, rel.target_id, rel.relationship_type);
+        }
+        await relStmt.finalize();
+        
+        // Process keywords
+        await processKeywordsBatch(db, keywordsToProcess);
+        
+        // Commit transaction
+        await db.exec('COMMIT');
+    } catch (error) {
+        await db.exec('ROLLBACK');
+        throw error;
+    }
+    
     console.log('\nDone processing files!');
+}
+
+// Extract categories from text (faster implementation)
+function extractCategories(text) {
+    const normalizedText = text.toLowerCase();
+    const categories = {};
+    
+    // Count matches for each category
+    for (const [category, pattern] of Object.entries(categoryPatterns)) {
+        const matches = normalizedText.match(pattern);
+        if (matches && matches.length > 0) {
+            categories[category] = matches.length;
+        }
+    }
+    
+    return categories;
+}
+
+// Process keywords in batch for better performance
+async function processKeywordsBatch(db, keywordsToProcess) {
+    // Insert keywords
+    const keywordMap = new Map();
+    const keywordStmt = await db.prepare('INSERT OR IGNORE INTO keywords (term, category, weight) VALUES (?, ?, ?)');
+    
+    // First pass: insert all unique keywords
+    for (const { categories } of keywordsToProcess) {
+        for (const [category, count] of Object.entries(categories)) {
+            // Use category as the term for simplicity and performance
+            await keywordStmt.run(category, category, Math.min(count, 10));
+        }
+    }
+    await keywordStmt.finalize();
+    
+    // Get all keywords
+    const keywords = await db.all('SELECT id, term, category FROM keywords');
+    for (const kw of keywords) {
+        keywordMap.set(kw.category, kw.id);
+    }
+    
+    // Insert node-keyword relationships
+    const nodeKeywordStmt = await db.prepare('INSERT INTO node_keywords (node_id, keyword_id, count) VALUES (?, ?, ?)');
+    for (const { nodeId, categories } of keywordsToProcess) {
+        for (const [category, count] of Object.entries(categories)) {
+            const keywordId = keywordMap.get(category);
+            if (keywordId) {
+                await nodeKeywordStmt.run(nodeId, keywordId, count);
+            }
+        }
+    }
+    await nodeKeywordStmt.finalize();
 }
 
 // Main function
@@ -206,16 +363,53 @@ async function main() {
         const db = await initializeDb();
 
         // Clear existing data
-        await db.exec('DELETE FROM docs; DELETE FROM sections; DELETE FROM relationships;');
+        await db.exec('DELETE FROM docs; DELETE FROM sections; DELETE FROM relationships; DELETE FROM keywords; DELETE FROM node_keywords;');
 
         console.log('Processing markdown files...');
         await processAllFiles(db);
+        
+        console.log('\nCreating category index...');
+        await createCategoryIndex(db);
 
         await db.close();
         console.log('Search database built successfully!');
     } catch (error) {
         console.error('Error building search database:', error);
         process.exit(1);
+    }
+}
+
+// Create a simplified category index for visualization
+async function createCategoryIndex(db) {
+    // Create a view for primary category per node
+    await db.exec(`
+        CREATE VIEW IF NOT EXISTS node_primary_category AS
+        SELECT node_id, 
+               k.category,
+               SUM(nk.count) as category_score
+        FROM node_keywords nk
+        JOIN keywords k ON nk.keyword_id = k.id
+        GROUP BY node_id, k.category
+        ORDER BY node_id, category_score DESC
+    `);
+    
+    // Log some statistics about keyword distribution
+    const categoryCounts = await db.all(`
+        WITH ranked_categories AS (
+            SELECT node_id, category, category_score,
+                   ROW_NUMBER() OVER (PARTITION BY node_id ORDER BY category_score DESC) as rank
+            FROM node_primary_category
+        )
+        SELECT category, COUNT(DISTINCT node_id) as node_count
+        FROM ranked_categories
+        WHERE rank = 1
+        GROUP BY category
+        ORDER BY node_count DESC
+    `);
+    
+    console.log('\nKeyword category distribution:');
+    for (const { category, node_count } of categoryCounts) {
+        console.log(`- ${category}: ${node_count} nodes`);
     }
 }
 
