@@ -252,6 +252,24 @@ async function processAllFiles(db) {
                 });
             }
             
+            // Add document-section relationships
+            for (const section of sections) {
+                const sectionId = `${relativePath}#${section.title.toLowerCase().replace(/\s+/g, '-')}`;
+                
+                // Create bidirectional relationships between document and its sections
+                relationshipsToInsert.push({
+                    source_id: relativePath,
+                    target_id: sectionId,
+                    relationship_type: 'category'
+                });
+                
+                relationshipsToInsert.push({
+                    source_id: sectionId,
+                    target_id: relativePath,
+                    relationship_type: 'category'
+                });
+            }
+            
             process.stdout.write('.');
         } catch (error) {
             console.error(`\nError processing ${file}:`, error);
@@ -392,6 +410,73 @@ async function createCategoryIndex(db) {
         GROUP BY node_id, k.category
         ORDER BY node_id, category_score DESC
     `);
+    
+    // Create category relationships between nodes with the same primary category
+    console.log('Creating category relationships between related nodes...');
+    
+    // Get the primary category for each node
+    const nodeCategories = await db.all(`
+        WITH ranked_categories AS (
+            SELECT node_id, category, category_score,
+                   ROW_NUMBER() OVER (PARTITION BY node_id ORDER BY category_score DESC) as rank
+            FROM node_primary_category
+        )
+        SELECT node_id, category
+        FROM ranked_categories
+        WHERE rank = 1
+    `);
+    
+    // Group nodes by category
+    const categoryNodes = {};
+    for (const { node_id, category } of nodeCategories) {
+        if (!categoryNodes[category]) {
+            categoryNodes[category] = [];
+        }
+        categoryNodes[category].push(node_id);
+    }
+    
+    // Create relationships between nodes in the same category
+    let relationshipCount = 0;
+    await db.exec('BEGIN TRANSACTION');
+    
+    try {
+        const relStmt = await db.prepare('INSERT INTO relationships (source_id, target_id, relationship_type) VALUES (?, ?, ?)');
+        
+        // For each category, create relationships between all nodes
+        for (const [category, nodes] of Object.entries(categoryNodes)) {
+            // Only process categories with multiple nodes
+            if (nodes.length > 1) {
+                for (let i = 0; i < nodes.length; i++) {
+                    for (let j = i + 1; j < nodes.length; j++) {
+                        // Skip if both are sections or if they're from the same document
+                        const sourceIsSection = nodes[i].includes('#');
+                        const targetIsSection = nodes[j].includes('#');
+                        
+                        // Extract document paths
+                        const sourceDoc = sourceIsSection ? nodes[i].split('#')[0] : nodes[i];
+                        const targetDoc = targetIsSection ? nodes[j].split('#')[0] : nodes[j];
+                        
+                        // Skip if both are sections from the same document
+                        if (sourceIsSection && targetIsSection && sourceDoc === targetDoc) {
+                            continue;
+                        }
+                        
+                        // Create bidirectional relationships
+                        await relStmt.run(nodes[i], nodes[j], 'category');
+                        await relStmt.run(nodes[j], nodes[i], 'category');
+                        relationshipCount += 2;
+                    }
+                }
+            }
+        }
+        
+        await relStmt.finalize();
+        await db.exec('COMMIT');
+        console.log(`Created ${relationshipCount} category relationships`);
+    } catch (error) {
+        await db.exec('ROLLBACK');
+        console.error('Error creating category relationships:', error);
+    }
     
     // Log some statistics about keyword distribution
     const categoryCounts = await db.all(`
