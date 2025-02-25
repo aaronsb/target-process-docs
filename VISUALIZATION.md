@@ -2,6 +2,10 @@
 
 This document describes the 3D visualization tool for exploring the documentation graph structure created by the search indexing system.
 
+![Documentation Graph Visualization](https://i.imgur.com/Uw5Ygxl.png)
+
+*Screenshot of the 3D documentation graph visualization showing document clusters connected by category relationships*
+
 ## Architecture
 
 The visualization system consists of several components working together:
@@ -144,7 +148,37 @@ The visualization works with the following database tables:
 - **relationships**: Contains link information
   - source_id: Source node ID
   - target_id: Target node ID
-  - relationship_type: Type of relationship
+  - relationship_type: Type of relationship (e.g., 'category')
+
+- **keywords**: Contains keyword information
+  - id: Unique identifier
+  - term: Keyword term
+  - category: Category name
+  - weight: Importance weight
+
+- **node_keywords**: Maps nodes to keywords
+  - node_id: Reference to document or section
+  - keyword_id: Reference to keyword
+  - count: Occurrence count
+
+- **node_primary_category**: A view that calculates the primary category for each node
+  - node_id: Reference to document or section
+  - category: Primary category name
+  - category_score: Relevance score
+
+### Category-Based Relationships
+
+The visualization creates meaningful relationships between documents and sections based on content categorization:
+
+1. **Document-Section Relationships**: Each document is connected to its sections with bidirectional 'category' relationships.
+
+2. **Category-Based Clustering**: Documents and sections are analyzed for keywords that indicate their primary category (e.g., "User Management", "Integration", "Process Control").
+
+3. **Targeted Connections**: Documents with the same primary category are connected with 'category' relationships, creating clusters of related content.
+
+4. **Cross-Document Relationships**: Documents are connected to relevant sections in other documents that share the same category.
+
+This approach creates a network of relationships that reveals the conceptual structure of the documentation, making it easier to discover related content across different documents.
 
 ## Future Enhancements
 
