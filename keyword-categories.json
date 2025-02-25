@@ -1,0 +1,20 @@
+{
+  "User Management": [
+    "user", "group", "permission", "role", "access", "account", "member", "team"
+  ],
+  "Integration": [
+    "api", "rest", "webhook", "workato", "zapier", "integration", "service", "endpoint"
+  ],
+  "Process Control": [
+    "workflow", "automation", "rule", "trigger", "process", "flow", "action", "event"
+  ],
+  "Data Management": [
+    "field", "entity", "custom field", "metric", "data", "attribute", "property", "value"
+  ],
+  "UI Components": [
+    "view", "board", "dashboard", "report", "chart", "graph", "visualization", "interface"
+  ],
+  "System": [
+    "setting", "configuration", "setup", "system", "admin", "management", "environment", "server"
+  ]
+}

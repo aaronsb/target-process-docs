@@ -86,6 +86,47 @@
             font-size: 24px;
             color: white;
         }
+        
+        .category-legend {
+            margin-top: 15px;
+            border-top: 1px solid #555;
+            padding-top: 10px;
+        }
+        
+        .category-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        
+        .color-box {
+            width: 15px;
+            height: 15px;
+            margin-right: 8px;
+            border-radius: 3px;
+        }
+        
+        .color-wheel {
+            width: 100%;
+            height: 150px;
+            margin-top: 15px;
+            position: relative;
+            border-radius: 5px;
+            overflow: hidden;
+            background-color: #333;
+        }
+        
+        .color-wheel-canvas {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .score-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            margin-top: 2px;
+        }
     </style>
 </head>
 <body>
@@ -109,6 +150,13 @@
             <option value="contains">Document-Section Links</option>
             <option value="parent-child">Section-Section Links</option>
             <option value="link">Document-Document Links</option>
+            <option value="category">Category Links</option>
+        </select>
+        
+        <label for="category-filter">Filter by Category:</label>
+        <select id="category-filter">
+            <option value="all">All Categories</option>
+            <!-- Categories will be added dynamically -->
         </select>
         
         <label for="search">Search:</label>
@@ -117,6 +165,21 @@
         <div>
             <button id="reset-camera">Reset Camera</button>
             <button id="toggle-rotation">Toggle Rotation</button>
+        </div>
+        
+        <div class="category-legend">
+            <h3>Category Legend</h3>
+            <div id="category-legend-items">
+                <!-- Category items will be added dynamically -->
+            </div>
+            
+            <h4>Color Wheel (Hue Circle)</h4>
+            <div class="color-wheel">
+                <canvas id="color-wheel-canvas" class="color-wheel-canvas"></canvas>
+            </div>
+            <div class="score-labels">
+                <span>Score affects saturation/brightness</span>
+            </div>
         </div>
     </div>
     
@@ -137,17 +200,21 @@
         let highlightLinks = new Set();
         let hoverNode = null;
         let isRotationActive = true;
+        let categories = new Set();
         
         // DOM elements
         const graphContainer = document.getElementById('graph-container');
         const nodeFilter = document.getElementById('node-filter');
         const linkFilter = document.getElementById('link-filter');
+        const categoryFilter = document.getElementById('category-filter');
         const searchInput = document.getElementById('search');
         const resetCameraBtn = document.getElementById('reset-camera');
         const toggleRotationBtn = document.getElementById('toggle-rotation');
         const infoPanel = document.getElementById('info-panel');
         const infoTitle = document.getElementById('info-title');
         const infoContent = document.getElementById('info-content');
+        const categoryLegendItems = document.getElementById('category-legend-items');
+        const colorWheelCanvas = document.getElementById('color-wheel-canvas');
         
         // Node and link colors
         const NODE_COLORS = {
@@ -158,8 +225,102 @@
         const LINK_COLORS = {
             contains: '#FBBC05',     // Google Yellow
             'parent-child': '#EA4335', // Google Red
-            link: '#4285F4'          // Google Blue
+            link: '#4285F4',         // Google Blue
+            category: '#9C27B0'      // Purple for category relationships
         };
+        
+        // Define categories with their hue values (0-360 degrees)
+        const CATEGORY_HUES = {
+            'User Management': 0,       // Red (0°)
+            'Integration': 60,          // Yellow (60°)
+            'Process Control': 120,     // Green (120°)
+            'Data Management': 180,     // Cyan (180°)
+            'UI Components': 240,       // Blue (240°)
+            'System': 300               // Magenta (300°)
+        };
+        
+        // Get color from hue (0-360) and saturation/lightness (0-100)
+        function getHSLColor(hue, saturation = 100, lightness = 50) {
+            return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+        }
+        
+        // Function to get category color
+        function getCategoryColor(category) {
+            return getHSLColor(CATEGORY_HUES[category] || 0);
+        }
+        
+        // Function to get color based on category and score
+        function getScoreColor(category, score) {
+            const hue = CATEGORY_HUES[category] || 0;
+            // Use score to adjust saturation and lightness
+            const saturation = 70 + (score * 30); // 70-100%
+            const lightness = 40 + (score * 20);  // 40-60%
+            return getHSLColor(hue, saturation, lightness);
+        }
+        
+        // Draw color wheel
+        function drawColorWheel() {
+            const ctx = colorWheelCanvas.getContext('2d');
+            const width = colorWheelCanvas.width = colorWheelCanvas.offsetWidth;
+            const height = colorWheelCanvas.height = colorWheelCanvas.offsetHeight;
+            const centerX = width / 2;
+            const centerY = height / 2;
+            const radius = Math.min(centerX, centerY) - 10;
+            
+            // Draw color wheel background
+            ctx.fillStyle = '#333';
+            ctx.fillRect(0, 0, width, height);
+            
+            // Draw category markers on the wheel
+            Object.entries(CATEGORY_HUES).forEach(([category, hue]) => {
+                // Convert hue to radians
+                const angle = (hue * Math.PI) / 180;
+                
+                // Calculate position on the circle
+                const x = centerX + radius * Math.cos(angle);
+                const y = centerY + radius * Math.sin(angle);
+                
+                // Draw line from center to edge
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.lineTo(x, y);
+                ctx.strokeStyle = getHSLColor(hue);
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                // Draw category label
+                ctx.fillStyle = '#fff';
+                ctx.font = '10px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                
+                // Position label outside the circle
+                const labelX = centerX + (radius + 15) * Math.cos(angle);
+                const labelY = centerY + (radius + 15) * Math.sin(angle);
+                
+                // Adjust label position to fit within canvas
+                const labelRadius = 5;
+                const adjustedLabelX = Math.max(labelRadius, Math.min(width - labelRadius, labelX));
+                const adjustedLabelY = Math.max(labelRadius, Math.min(height - labelRadius, labelY));
+                
+                // Draw small colored circle
+                ctx.beginPath();
+                ctx.arc(adjustedLabelX, adjustedLabelY, labelRadius, 0, 2 * Math.PI);
+                ctx.fillStyle = getHSLColor(hue);
+                ctx.fill();
+            });
+            
+            // Draw concentric circles for score levels
+            const scoreSteps = 5;
+            for (let i = 1; i <= scoreSteps; i++) {
+                const scoreRadius = (radius * i) / scoreSteps;
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, scoreRadius, 0, 2 * Math.PI);
+                ctx.strokeStyle = `rgba(255, 255, 255, ${i / scoreSteps * 0.3})`;
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            }
+        }
         
         // Fetch graph data from the API
         fetch('/api/graph-data')
@@ -170,6 +331,43 @@
                 
                 // Store the original data
                 graphData = data;
+                
+                // Extract all categories
+                graphData.nodes.forEach(node => {
+                    if (node.primaryCategory) {
+                        categories.add(node.primaryCategory);
+                    }
+                });
+                
+                // Populate category filter
+                categories.forEach(category => {
+                    const option = document.createElement('option');
+                    option.value = category;
+                    option.textContent = category;
+                    categoryFilter.appendChild(option);
+                });
+                
+                // Create category legend
+                categories.forEach(category => {
+                    if (CATEGORY_HUES.hasOwnProperty(category)) {
+                        const legendItem = document.createElement('div');
+                        legendItem.className = 'category-item';
+                        
+                        const colorBox = document.createElement('div');
+                        colorBox.className = 'color-box';
+                        colorBox.style.backgroundColor = getCategoryColor(category);
+                        
+                        const label = document.createElement('span');
+                        label.textContent = `${category} (${CATEGORY_HUES[category]}°)`;
+                        
+                        legendItem.appendChild(colorBox);
+                        legendItem.appendChild(label);
+                        categoryLegendItems.appendChild(legendItem);
+                    }
+                });
+                
+                // Draw the color wheel
+                drawColorWheel();
                 
                 // Apply initial filters
                 applyFilters();
@@ -189,11 +387,24 @@
         function initGraph() {
             Graph = ForceGraph3D()(graphContainer)
                 .graphData(filteredData)
-                .nodeLabel(node => node.name)
+                .nodeLabel(node => {
+                    let label = node.name;
+                    if (node.primaryCategory) {
+                        label += ` (${node.primaryCategory}, Score: ${node.categoryScore.toFixed(2)})`;
+                    }
+                    return label;
+                })
                 .nodeColor(node => {
                     if (highlightNodes.size > 0) {
                         return highlightNodes.has(node) ? NODE_COLORS[node.group] : 'rgba(200, 200, 200, 0.3)';
                     }
+                    
+                    // If node has a primary category, use hue-based color with score affecting saturation/lightness
+                    if (node.primaryCategory && CATEGORY_HUES.hasOwnProperty(node.primaryCategory)) {
+                        return getScoreColor(node.primaryCategory, node.categoryScore || 0.5);
+                    }
+                    
+                    // Fallback to default group color
                     return NODE_COLORS[node.group] || '#FFFFFF';
                 })
                 .nodeVal('val')
@@ -243,6 +454,7 @@
         function setupEventListeners() {
             nodeFilter.addEventListener('change', applyFilters);
             linkFilter.addEventListener('change', applyFilters);
+            categoryFilter.addEventListener('change', applyFilters);
             searchInput.addEventListener('input', applyFilters);
             
             resetCameraBtn.addEventListener('click', () => {
@@ -253,18 +465,27 @@
                 isRotationActive = !isRotationActive;
                 toggleRotationBtn.textContent = isRotationActive ? 'Stop Rotation' : 'Start Rotation';
             });
+            
+            // Redraw color wheel on window resize
+            window.addEventListener('resize', drawColorWheel);
         }
         
         // Apply filters based on user selections
         function applyFilters() {
             const nodeType = nodeFilter.value;
             const linkType = linkFilter.value;
+            const categoryType = categoryFilter.value;
             const searchTerm = searchInput.value.toLowerCase();
             
             // Filter nodes
             filteredData.nodes = graphData.nodes.filter(node => {
                 // Apply node type filter
                 if (nodeType !== 'all' && node.group !== nodeType) {
+                    return false;
+                }
+                
+                // Apply category filter
+                if (categoryType !== 'all' && node.primaryCategory !== categoryType) {
                     return false;
                 }
                 
@@ -353,6 +574,27 @@
             
             if (node.section_path) {
                 content += `<p><strong>Section Path:</strong> ${node.section_path}</p>`;
+            }
+            
+            // Add category information
+            if (node.primaryCategory) {
+                content += `<p><strong>Primary Category:</strong> ${node.primaryCategory}</p>`;
+                content += `<p><strong>Match Score:</strong> ${node.categoryScore.toFixed(2)}</p>`;
+                
+                // Add color sample
+                if (CATEGORY_HUES.hasOwnProperty(node.primaryCategory)) {
+                    const colorSample = getScoreColor(node.primaryCategory, node.categoryScore || 0.5);
+                    content += `<div style="width: 20px; height: 20px; background-color: ${colorSample}; display: inline-block; margin-right: 5px; border-radius: 3px;"></div>`;
+                    content += `<span>Hue: ${CATEGORY_HUES[node.primaryCategory]}° at score ${node.categoryScore.toFixed(2)}</span>`;
+                }
+                
+                if (node.categories && node.categories.length > 1) {
+                    content += `<p><strong>All Categories:</strong></p><ul>`;
+                    node.categories.forEach(cat => {
+                        content += `<li>${cat.category}: ${cat.score.toFixed(2)}</li>`;
+                    });
+                    content += `</ul>`;
+                }
             }
             
             infoContent.innerHTML = content;

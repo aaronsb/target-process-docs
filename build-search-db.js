@@ -54,6 +54,7 @@ async function initializeDb() {
             node_id TEXT,
             keyword_id INTEGER,
             count INTEGER DEFAULT 1,
+            match_score REAL DEFAULT 0.5, -- New column for normalized score (0-1)
             FOREIGN KEY (keyword_id) REFERENCES keywords(id)
         );
         
@@ -153,36 +154,38 @@ function findInternalLinks(content) {
     return links;
 }
 
-// Define keyword categories and their associated terms - simplified for performance
-const keywordCategories = {
-    'User Management': [
-        'user', 'group', 'permission', 'role', 'access', 'account', 'member', 'team'
-    ],
-    'Integration': [
-        'api', 'rest', 'webhook', 'workato', 'zapier', 'integration', 'service', 'endpoint'
-    ],
-    'Process Control': [
-        'workflow', 'automation', 'rule', 'trigger', 'process', 'flow', 'action', 'event'
-    ],
-    'Data Management': [
-        'field', 'entity', 'custom field', 'metric', 'data', 'attribute', 'property', 'value'
-    ],
-    'UI Components': [
-        'view', 'board', 'dashboard', 'report', 'chart', 'graph', 'visualization', 'interface'
-    ],
-    'System': [
-        'setting', 'configuration', 'setup', 'system', 'admin', 'management', 'environment', 'server'
-    ]
-};
+// Load keyword categories from JSON file
+async function loadKeywordCategories() {
+    try {
+        const data = await fs.readFile('keyword-categories.json', 'utf-8');
+        return JSON.parse(data);
+    } catch (error) {
+        console.error('Error loading keyword categories:', error);
+        // Fallback to default categories if file not found
+        return {
+            'User Management': ['user', 'group', 'permission', 'role', 'access', 'account', 'member', 'team'],
+            'Integration': ['api', 'rest', 'webhook', 'workato', 'zapier', 'integration', 'service', 'endpoint'],
+            'Process Control': ['workflow', 'automation', 'rule', 'trigger', 'process', 'flow', 'action', 'event'],
+            'Data Management': ['field', 'entity', 'custom field', 'metric', 'data', 'attribute', 'property', 'value'],
+            'UI Components': ['view', 'board', 'dashboard', 'report', 'chart', 'graph', 'visualization', 'interface'],
+            'System': ['setting', 'configuration', 'setup', 'system', 'admin', 'management', 'environment', 'server']
+        };
+    }
+}
 
 // Prepare regex patterns for each category (for faster matching)
-const categoryPatterns = {};
-for (const [category, terms] of Object.entries(keywordCategories)) {
-    categoryPatterns[category] = new RegExp('\\b(' + terms.join('|') + ')\\b', 'gi');
-}
+let categoryPatterns = {};
 
 // Process all markdown files in the docs directory
 async function processAllFiles(db) {
+    // Load keyword categories from JSON file
+    const keywordCategories = await loadKeywordCategories();
+    
+    // Prepare regex patterns for each category
+    categoryPatterns = {};
+    for (const [category, terms] of Object.entries(keywordCategories)) {
+        categoryPatterns[category] = new RegExp('\\b(' + terms.join('|') + ')\\b', 'gi');
+    }
     const files = await fs.readdir('docs');
     const markdownFiles = files.filter(file => file.endsWith('.md'));
 
@@ -324,16 +327,27 @@ async function processAllFiles(db) {
     console.log('\nDone processing files!');
 }
 
-// Extract categories from text (faster implementation)
+// Extract categories from text with normalized scores
 function extractCategories(text) {
     const normalizedText = text.toLowerCase();
     const categories = {};
+    const textLength = Math.max(normalizedText.length, 1); // Avoid division by zero
     
     // Count matches for each category
     for (const [category, pattern] of Object.entries(categoryPatterns)) {
         const matches = normalizedText.match(pattern);
         if (matches && matches.length > 0) {
-            categories[category] = matches.length;
+            const count = matches.length;
+            
+            // Calculate normalized score (0-1)
+            // Formula considers both match count and text length
+            // We normalize by text length to avoid bias toward longer texts
+            const score = Math.min(count / Math.sqrt(textLength / 100), 1);
+            
+            categories[category] = {
+                count: count,
+                score: score
+            };
         }
     }
     
@@ -348,8 +362,9 @@ async function processKeywordsBatch(db, keywordsToProcess) {
     
     // First pass: insert all unique keywords
     for (const { categories } of keywordsToProcess) {
-        for (const [category, count] of Object.entries(categories)) {
+        for (const [category, data] of Object.entries(categories)) {
             // Use category as the term for simplicity and performance
+            const count = typeof data === 'object' ? data.count : data; // Handle both new and old format
             await keywordStmt.run(category, category, Math.min(count, 10));
         }
     }
@@ -362,12 +377,20 @@ async function processKeywordsBatch(db, keywordsToProcess) {
     }
     
     // Insert node-keyword relationships
-    const nodeKeywordStmt = await db.prepare('INSERT INTO node_keywords (node_id, keyword_id, count) VALUES (?, ?, ?)');
+    const nodeKeywordStmt = await db.prepare('INSERT INTO node_keywords (node_id, keyword_id, count, match_score) VALUES (?, ?, ?, ?)');
     for (const { nodeId, categories } of keywordsToProcess) {
-        for (const [category, count] of Object.entries(categories)) {
+        for (const [category, data] of Object.entries(categories)) {
             const keywordId = keywordMap.get(category);
             if (keywordId) {
-                await nodeKeywordStmt.run(nodeId, keywordId, count);
+                // Handle both new and old format
+                if (typeof data === 'object') {
+                    await nodeKeywordStmt.run(nodeId, keywordId, data.count, data.score);
+                } else {
+                    // For backward compatibility, calculate a simple score
+                    const count = data;
+                    const score = Math.min(count / 10, 1); // Simple normalization
+                    await nodeKeywordStmt.run(nodeId, keywordId, count, score);
+                }
             }
         }
     }
@@ -399,16 +422,18 @@ async function main() {
 
 // Create a simplified category index for visualization
 async function createCategoryIndex(db) {
-    // Create a view for primary category per node
+    // Create a view for primary category per node with normalized scores
     await db.exec(`
-        CREATE VIEW IF NOT EXISTS node_primary_category AS
+        DROP VIEW IF EXISTS node_primary_category;
+        CREATE VIEW node_primary_category AS
         SELECT node_id, 
                k.category,
-               SUM(nk.count) as category_score
+               SUM(nk.count) as category_count,
+               AVG(nk.match_score) as match_score
         FROM node_keywords nk
         JOIN keywords k ON nk.keyword_id = k.id
         GROUP BY node_id, k.category
-        ORDER BY node_id, category_score DESC
+        ORDER BY node_id, category_count DESC
     `);
     
     // Create targeted category relationships between related nodes
@@ -417,8 +442,8 @@ async function createCategoryIndex(db) {
     // Get documents with their primary categories
     const docCategories = await db.all(`
         WITH ranked_categories AS (
-            SELECT node_id, category, category_score,
-                   ROW_NUMBER() OVER (PARTITION BY node_id ORDER BY category_score DESC) as rank
+            SELECT node_id, category, category_count,
+                   ROW_NUMBER() OVER (PARTITION BY node_id ORDER BY category_count DESC) as rank
             FROM node_primary_category
         )
         SELECT node_id, category
@@ -430,8 +455,8 @@ async function createCategoryIndex(db) {
     // Get sections with their primary categories
     const sectionCategories = await db.all(`
         WITH ranked_categories AS (
-            SELECT node_id, category, category_score,
-                   ROW_NUMBER() OVER (PARTITION BY node_id ORDER BY category_score DESC) as rank
+            SELECT node_id, category, category_count,
+                   ROW_NUMBER() OVER (PARTITION BY node_id ORDER BY category_count DESC) as rank
             FROM node_primary_category
         )
         SELECT node_id, category
@@ -507,8 +532,8 @@ async function createCategoryIndex(db) {
     // Log some statistics about keyword distribution
     const categoryCounts = await db.all(`
         WITH ranked_categories AS (
-            SELECT node_id, category, category_score,
-                   ROW_NUMBER() OVER (PARTITION BY node_id ORDER BY category_score DESC) as rank
+            SELECT node_id, category, category_count,
+                   ROW_NUMBER() OVER (PARTITION BY node_id ORDER BY category_count DESC) as rank
             FROM node_primary_category
         )
         SELECT category, COUNT(DISTINCT node_id) as node_count

@@ -48,47 +48,82 @@ async function main() {
 
   // Function to extract data from the database
   async function extractGraphData() {
-  // Get all documents
-  const docs = await db.all('SELECT path, title, section_path FROM docs');
-  
-  // Get all sections
-  const sections = await db.all('SELECT doc_path, section_id, title, level, parent_id, section_path FROM sections');
-  
-  // Get all relationships
-  const relationships = await db.all('SELECT source_id, target_id, relationship_type FROM relationships');
-  
+    // Get all documents
+    const docs = await db.all('SELECT path, title, section_path FROM docs');
+    
+    // Get all sections
+    const sections = await db.all('SELECT doc_path, section_id, title, level, parent_id, section_path FROM sections');
+    
+    // Get all relationships
+    const relationships = await db.all('SELECT source_id, target_id, relationship_type FROM relationships');
+    
+    // Get keyword category scores for all nodes
+    const categoryScores = await db.all(`
+      SELECT node_id, category, match_score 
+      FROM node_primary_category
+      ORDER BY node_id, category_count DESC
+    `);
+    
+    // Create a map of node categories and scores
+    const nodeCategories = new Map();
+    categoryScores.forEach(score => {
+      if (!nodeCategories.has(score.node_id)) {
+        nodeCategories.set(score.node_id, []);
+      }
+      nodeCategories.get(score.node_id).push({
+        category: score.category,
+        score: score.match_score
+      });
+    });
+    
     // Create nodes and links for the graph
     const nodes = [];
     const links = [];
     const nodeMap = new Map();
-  
+    
     // Add document nodes
     docs.forEach((doc, index) => {
-    const node = {
-      id: doc.path,
-      name: doc.title || doc.path,
-      val: 20, // Size for document nodes
-      group: 'document',
-      path: doc.path,
-      section_path: doc.section_path
-    };
-    nodes.push(node);
-    nodeMap.set(doc.path, index);
-  });
-  
+      // Get category data for this document
+      const categories = nodeCategories.get(doc.path) || [];
+      // Get primary category (highest score)
+      const primaryCategory = categories.length > 0 ? categories[0] : null;
+      
+      const node = {
+        id: doc.path,
+        name: doc.title || doc.path,
+        val: 20, // Size for document nodes
+        group: 'document',
+        path: doc.path,
+        section_path: doc.section_path,
+        categories: categories,
+        primaryCategory: primaryCategory ? primaryCategory.category : null,
+        categoryScore: primaryCategory ? primaryCategory.score : 0
+      };
+      nodes.push(node);
+      nodeMap.set(doc.path, index);
+    });
+    
     // Add section nodes
     sections.forEach((section, index) => {
-    const node = {
-      id: section.section_id,
-      name: section.title,
-      val: 10, // Size for section nodes
-      group: 'section',
-      level: section.level,
-      doc_path: section.doc_path,
-      section_path: section.section_path
-    };
-    nodes.push(node);
-    nodeMap.set(section.section_id, index + docs.length);
+      // Get category data for this section
+      const categories = nodeCategories.get(section.section_id) || [];
+      // Get primary category (highest score)
+      const primaryCategory = categories.length > 0 ? categories[0] : null;
+      
+      const node = {
+        id: section.section_id,
+        name: section.title,
+        val: 10, // Size for section nodes
+        group: 'section',
+        level: section.level,
+        doc_path: section.doc_path,
+        section_path: section.section_path,
+        categories: categories,
+        primaryCategory: primaryCategory ? primaryCategory.category : null,
+        categoryScore: primaryCategory ? primaryCategory.score : 0
+      };
+      nodes.push(node);
+      nodeMap.set(section.section_id, index + docs.length);
     
     // Add link from document to section
     if (nodeMap.has(section.doc_path)) {
