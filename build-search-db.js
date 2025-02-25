@@ -411,11 +411,11 @@ async function createCategoryIndex(db) {
         ORDER BY node_id, category_score DESC
     `);
     
-    // Create category relationships between nodes with the same primary category
-    console.log('Creating category relationships between related nodes...');
+    // Create targeted category relationships between related nodes
+    console.log('Creating targeted category relationships...');
     
-    // Get the primary category for each node
-    const nodeCategories = await db.all(`
+    // Get documents with their primary categories
+    const docCategories = await db.all(`
         WITH ranked_categories AS (
             SELECT node_id, category, category_score,
                    ROW_NUMBER() OVER (PARTITION BY node_id ORDER BY category_score DESC) as rank
@@ -423,16 +423,39 @@ async function createCategoryIndex(db) {
         )
         SELECT node_id, category
         FROM ranked_categories
-        WHERE rank = 1
+        WHERE rank = 1 AND node_id NOT LIKE '%#%'
+        ORDER BY category, node_id
     `);
     
-    // Group nodes by category
-    const categoryNodes = {};
-    for (const { node_id, category } of nodeCategories) {
-        if (!categoryNodes[category]) {
-            categoryNodes[category] = [];
+    // Get sections with their primary categories
+    const sectionCategories = await db.all(`
+        WITH ranked_categories AS (
+            SELECT node_id, category, category_score,
+                   ROW_NUMBER() OVER (PARTITION BY node_id ORDER BY category_score DESC) as rank
+            FROM node_primary_category
+        )
+        SELECT node_id, category
+        FROM ranked_categories
+        WHERE rank = 1 AND node_id LIKE '%#%'
+        ORDER BY category, node_id
+    `);
+    
+    // Create a map of documents by category
+    const docsByCategory = {};
+    for (const { node_id, category } of docCategories) {
+        if (!docsByCategory[category]) {
+            docsByCategory[category] = [];
         }
-        categoryNodes[category].push(node_id);
+        docsByCategory[category].push(node_id);
+    }
+    
+    // Create a map of sections by category
+    const sectionsByCategory = {};
+    for (const { node_id, category } of sectionCategories) {
+        if (!sectionsByCategory[category]) {
+            sectionsByCategory[category] = [];
+        }
+        sectionsByCategory[category].push(node_id);
     }
     
     // Create relationships between nodes in the same category
@@ -442,30 +465,33 @@ async function createCategoryIndex(db) {
     try {
         const relStmt = await db.prepare('INSERT INTO relationships (source_id, target_id, relationship_type) VALUES (?, ?, ?)');
         
-        // For each category, create relationships between all nodes
-        for (const [category, nodes] of Object.entries(categoryNodes)) {
-            // Only process categories with multiple nodes
-            if (nodes.length > 1) {
-                for (let i = 0; i < nodes.length; i++) {
-                    for (let j = i + 1; j < nodes.length; j++) {
-                        // Skip if both are sections or if they're from the same document
-                        const sourceIsSection = nodes[i].includes('#');
-                        const targetIsSection = nodes[j].includes('#');
-                        
-                        // Extract document paths
-                        const sourceDoc = sourceIsSection ? nodes[i].split('#')[0] : nodes[i];
-                        const targetDoc = targetIsSection ? nodes[j].split('#')[0] : nodes[j];
-                        
-                        // Skip if both are sections from the same document
-                        if (sourceIsSection && targetIsSection && sourceDoc === targetDoc) {
-                            continue;
-                        }
-                        
-                        // Create bidirectional relationships
-                        await relStmt.run(nodes[i], nodes[j], 'category');
-                        await relStmt.run(nodes[j], nodes[i], 'category');
-                        relationshipCount += 2;
-                    }
+        // For each category, create relationships between a limited number of documents
+        for (const [category, docs] of Object.entries(docsByCategory)) {
+            // Limit to 10 documents per category to avoid too many relationships
+            const limitedDocs = docs.slice(0, 10);
+            
+            // Create relationships between these documents
+            for (let i = 0; i < limitedDocs.length; i++) {
+                for (let j = i + 1; j < limitedDocs.length; j++) {
+                    // Create bidirectional relationships
+                    await relStmt.run(limitedDocs[i], limitedDocs[j], 'category');
+                    await relStmt.run(limitedDocs[j], limitedDocs[i], 'category');
+                    relationshipCount += 2;
+                }
+            }
+            
+            // For each document, connect to a few sections in the same category
+            for (const doc of limitedDocs) {
+                const sectionsInCategory = sectionsByCategory[category] || [];
+                // Get sections that don't belong to this document
+                const otherSections = sectionsInCategory.filter(section => !section.startsWith(doc));
+                
+                // Connect to up to 5 sections from other documents
+                const limitedSections = otherSections.slice(0, 5);
+                for (const section of limitedSections) {
+                    await relStmt.run(doc, section, 'category');
+                    await relStmt.run(section, doc, 'category');
+                    relationshipCount += 2;
                 }
             }
         }
