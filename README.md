@@ -73,6 +73,40 @@ Examples:
 ./search-docs.sh -r api-v1-overview.md
 ```
 
+### Visualize Documentation Graph
+
+Visualize the documentation structure and relationships in an interactive 3D graph:
+```bash
+./visualize-docs.sh [OPTIONS]
+```
+
+Options:
+- `--db <path>`: Path to SQLite database file (default: docs.db)
+- `--port <number>`: Port to run the server on (default: 8080)
+- `-h, --help`: Show help message
+
+This will:
+1. Check if the database exists
+2. Install dependencies if needed
+3. Start a local web server
+4. Open your browser to the visualization
+
+The visualization provides:
+- Interactive 3D graph of documents and sections
+- Filtering by node and link types
+- Search functionality
+- Node highlighting and information display
+- Camera controls and auto-rotation
+
+Example:
+```bash
+# Run with default settings
+./visualize-docs.sh
+
+# Specify a different database file and port
+./visualize-docs.sh --db custom-docs.db --port 3000
+```
+
 ## Output
 
 The following files are generated:
@@ -104,5 +138,9 @@ Search results are displayed directly in the terminal:
 - `build-search-db.js` - Builds SQLite search database
 - `refresh-docs.sh` - Convenience script to refresh documentation and search index
 - `search-docs.sh` - Search interface for documentation
+- `visualize-graph.js` - Extracts data from the database and serves the visualization
+- `visualize-docs.sh` - Convenience script to run the visualization
+- `visualization/` - Directory containing visualization files
+  - `index.html` - Main visualization interface
 - `package.json` - Project dependencies
 - `.gitignore` - Excludes scraped content, search index, and dependencies

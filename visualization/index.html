@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentation Graph Visualization</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+            background-color: #1a1a1a;
+            color: #f0f0f0;
+        }
+        
+        #graph-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+        
+        #controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 10;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            max-width: 300px;
+        }
+        
+        #info-panel {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 10;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            max-width: 300px;
+            display: none;
+        }
+        
+        h1 {
+            margin-top: 0;
+            font-size: 1.2em;
+        }
+        
+        label {
+            display: block;
+            margin: 5px 0;
+        }
+        
+        select, input {
+            width: 100%;
+            margin-bottom: 10px;
+            background-color: #333;
+            color: #f0f0f0;
+            border: 1px solid #555;
+            padding: 5px;
+        }
+        
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 14px;
+            margin: 2px;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+        
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div id="graph-container">
+        <div class="loading">Loading graph data...</div>
+    </div>
+    
+    <div id="controls">
+        <h1>Documentation Graph</h1>
+        
+        <label for="node-filter">Filter Nodes:</label>
+        <select id="node-filter">
+            <option value="all">All Nodes</option>
+            <option value="document">Documents Only</option>
+            <option value="section">Sections Only</option>
+        </select>
+        
+        <label for="link-filter">Filter Links:</label>
+        <select id="link-filter">
+            <option value="all">All Links</option>
+            <option value="contains">Document-Section Links</option>
+            <option value="parent-child">Section-Section Links</option>
+            <option value="link">Document-Document Links</option>
+        </select>
+        
+        <label for="search">Search:</label>
+        <input type="text" id="search" placeholder="Search nodes...">
+        
+        <div>
+            <button id="reset-camera">Reset Camera</button>
+            <button id="toggle-rotation">Toggle Rotation</button>
+        </div>
+    </div>
+    
+    <div id="info-panel">
+        <h2 id="info-title">Node Information</h2>
+        <div id="info-content"></div>
+    </div>
+    
+    <!-- Load 3d-force-graph from CDN -->
+    <script src="https://unpkg.com/3d-force-graph"></script>
+    
+    <script>
+        // Initialize variables
+        let Graph;
+        let graphData = { nodes: [], links: [] };
+        let filteredData = { nodes: [], links: [] };
+        let highlightNodes = new Set();
+        let highlightLinks = new Set();
+        let hoverNode = null;
+        let isRotationActive = true;
+        
+        // DOM elements
+        const graphContainer = document.getElementById('graph-container');
+        const nodeFilter = document.getElementById('node-filter');
+        const linkFilter = document.getElementById('link-filter');
+        const searchInput = document.getElementById('search');
+        const resetCameraBtn = document.getElementById('reset-camera');
+        const toggleRotationBtn = document.getElementById('toggle-rotation');
+        const infoPanel = document.getElementById('info-panel');
+        const infoTitle = document.getElementById('info-title');
+        const infoContent = document.getElementById('info-content');
+        
+        // Node and link colors
+        const NODE_COLORS = {
+            document: '#4285F4', // Google Blue
+            section: '#34A853'   // Google Green
+        };
+        
+        const LINK_COLORS = {
+            contains: '#FBBC05',     // Google Yellow
+            'parent-child': '#EA4335', // Google Red
+            link: '#4285F4'          // Google Blue
+        };
+        
+        // Fetch graph data from the API
+        fetch('/api/graph-data')
+            .then(response => response.json())
+            .then(data => {
+                // Remove loading message
+                document.querySelector('.loading').style.display = 'none';
+                
+                // Store the original data
+                graphData = data;
+                
+                // Apply initial filters
+                applyFilters();
+                
+                // Initialize the graph
+                initGraph();
+                
+                // Add event listeners
+                setupEventListeners();
+            })
+            .catch(error => {
+                console.error('Error fetching graph data:', error);
+                document.querySelector('.loading').textContent = 'Error loading graph data. Please check the console for details.';
+            });
+        
+        // Initialize the 3D force graph
+        function initGraph() {
+            Graph = ForceGraph3D()(graphContainer)
+                .graphData(filteredData)
+                .nodeLabel(node => node.name)
+                .nodeColor(node => {
+                    if (highlightNodes.size > 0) {
+                        return highlightNodes.has(node) ? NODE_COLORS[node.group] : 'rgba(200, 200, 200, 0.3)';
+                    }
+                    return NODE_COLORS[node.group] || '#FFFFFF';
+                })
+                .nodeVal('val')
+                .linkWidth(link => highlightLinks.has(link) ? 2 : 1)
+                .linkColor(link => {
+                    if (highlightLinks.size > 0) {
+                        return highlightLinks.has(link) ? LINK_COLORS[link.type] : 'rgba(200, 200, 200, 0.3)';
+                    }
+                    return LINK_COLORS[link.type] || '#FFFFFF';
+                })
+                .linkDirectionalArrowLength(3)
+                .linkDirectionalArrowRelPos(1)
+                .onNodeHover(node => {
+                    if (node) {
+                        highlightNodeAndLinks(node);
+                        showNodeInfo(node);
+                    } else {
+                        resetHighlight();
+                        hideNodeInfo();
+                    }
+                    hoverNode = node || null;
+                })
+                .onNodeClick(node => {
+                    // Center the camera on the clicked node
+                    Graph.centerAt(node.x, node.y, node.z, 1000);
+                    Graph.zoom(1.5, 1000);
+                })
+                .onBackgroundClick(() => {
+                    resetHighlight();
+                    hideNodeInfo();
+                });
+            
+            // Add rotation animation
+            let angle = 0;
+            setInterval(() => {
+                if (isRotationActive && !hoverNode) {
+                    angle += 0.001;
+                    Graph.cameraPosition({
+                        x: 400 * Math.sin(angle),
+                        z: 400 * Math.cos(angle)
+                    });
+                }
+            }, 10);
+        }
+        
+        // Set up event listeners for controls
+        function setupEventListeners() {
+            nodeFilter.addEventListener('change', applyFilters);
+            linkFilter.addEventListener('change', applyFilters);
+            searchInput.addEventListener('input', applyFilters);
+            
+            resetCameraBtn.addEventListener('click', () => {
+                Graph.cameraPosition({ x: 0, y: 0, z: 400 }, { x: 0, y: 0, z: 0 }, 1000);
+            });
+            
+            toggleRotationBtn.addEventListener('click', () => {
+                isRotationActive = !isRotationActive;
+                toggleRotationBtn.textContent = isRotationActive ? 'Stop Rotation' : 'Start Rotation';
+            });
+        }
+        
+        // Apply filters based on user selections
+        function applyFilters() {
+            const nodeType = nodeFilter.value;
+            const linkType = linkFilter.value;
+            const searchTerm = searchInput.value.toLowerCase();
+            
+            // Filter nodes
+            filteredData.nodes = graphData.nodes.filter(node => {
+                // Apply node type filter
+                if (nodeType !== 'all' && node.group !== nodeType) {
+                    return false;
+                }
+                
+                // Apply search filter
+                if (searchTerm && !node.name.toLowerCase().includes(searchTerm)) {
+                    return false;
+                }
+                
+                return true;
+            });
+            
+            // Get filtered node IDs
+            const nodeIds = new Set(filteredData.nodes.map(node => node.id));
+            
+            // Filter links
+            filteredData.links = graphData.links.filter(link => {
+                // Apply link type filter
+                if (linkType !== 'all' && link.type !== linkType) {
+                    return false;
+                }
+                
+                // Only include links between nodes that are visible
+                return nodeIds.has(link.source.id || link.source) && nodeIds.has(link.target.id || link.target);
+            });
+            
+            // Update the graph with filtered data
+            if (Graph) {
+                Graph.graphData(filteredData);
+            }
+        }
+        
+        // Highlight node and its connected links
+        function highlightNodeAndLinks(node) {
+            highlightNodes.clear();
+            highlightLinks.clear();
+            
+            highlightNodes.add(node);
+            
+            // Find connected nodes and links
+            filteredData.links.forEach(link => {
+                const sourceId = link.source.id || link.source;
+                const targetId = link.target.id || link.target;
+                
+                if (sourceId === node.id || targetId === node.id) {
+                    highlightLinks.add(link);
+                    
+                    // Add connected nodes
+                    if (sourceId === node.id) {
+                        const targetNode = filteredData.nodes.find(n => n.id === targetId);
+                        if (targetNode) highlightNodes.add(targetNode);
+                    } else {
+                        const sourceNode = filteredData.nodes.find(n => n.id === sourceId);
+                        if (sourceNode) highlightNodes.add(sourceNode);
+                    }
+                }
+            });
+            
+            // Update the graph
+            Graph.nodeColor(Graph.nodeColor()).linkWidth(Graph.linkWidth()).linkColor(Graph.linkColor());
+        }
+        
+        // Reset highlight
+        function resetHighlight() {
+            highlightNodes.clear();
+            highlightLinks.clear();
+            
+            // Update the graph
+            if (Graph) {
+                Graph.nodeColor(Graph.nodeColor()).linkWidth(Graph.linkWidth()).linkColor(Graph.linkColor());
+            }
+        }
+        
+        // Show node information in the info panel
+        function showNodeInfo(node) {
+            infoPanel.style.display = 'block';
+            infoTitle.textContent = node.name;
+            
+            let content = `<p><strong>Type:</strong> ${node.group}</p>`;
+            
+            if (node.group === 'document') {
+                content += `<p><strong>Path:</strong> ${node.path}</p>`;
+            } else if (node.group === 'section') {
+                content += `<p><strong>Level:</strong> ${node.level}</p>`;
+                content += `<p><strong>Document:</strong> ${node.doc_path}</p>`;
+            }
+            
+            if (node.section_path) {
+                content += `<p><strong>Section Path:</strong> ${node.section_path}</p>`;
+            }
+            
+            infoContent.innerHTML = content;
+        }
+        
+        // Hide the info panel
+        function hideNodeInfo() {
+            infoPanel.style.display = 'none';
+        }
+    </script>
+</body>
+</html>
