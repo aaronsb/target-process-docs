@@ -122,20 +122,6 @@ async function updateBackwardCompatibility() {
 async function scrapeDevDocs(force = false) {
   console.log('\n🔄 Scraping documentation from dev.targetprocess.com...');
   
-  // Check if docs exist and handle accordingly
-  const existing = await checkExistingContent();
-  if (existing.devDocs && !force) {
-    const shouldRefresh = await confirm('Documentation already exists. Would you like to refresh it?');
-    if (!shouldRefresh) {
-      console.log('➡️ Skipping documentation scraping.');
-      return false;
-    }
-    
-    console.log('🗑️ Removing existing documentation...');
-    await fs.rm(DEV_DOCS_DIR, { recursive: true, force: true });
-    await fs.mkdir(DEV_DOCS_DIR, { recursive: true });
-  }
-  
   // Make sure the legacy path is removed for clean scraping
   try {
     await fs.rm('docs', { recursive: true, force: true });
@@ -145,14 +131,13 @@ async function scrapeDevDocs(force = false) {
   
   console.log('🚀 Running general documentation scraper...');
   
-  // We'll create a symbolic link first to ensure compatibility with the scraper
-  await fs.symlink(DEV_DOCS_DIR, 'docs', 'dir');
+  // Create a direct path for the scraper to use instead of symlink during scraping
+  // This prevents duplicate scraping issues by ensuring a clean target directory
+  await fs.mkdir('docs', { recursive: true });
   
   try {
     // Run the scraper
     execSync('node scrape.js', { stdio: 'inherit' });
-    console.log('📦 Building search database...');
-    execSync('node build-search-db.js', { stdio: 'inherit' });
     console.log('✅ Documentation scraping completed successfully!');
     return true;
   } catch (error) {
@@ -161,11 +146,24 @@ async function scrapeDevDocs(force = false) {
   }
 }
 
+// Function to build search database
+async function buildSearchDb() {
+  console.log('\n🔄 Building search database...');
+  try {
+    execSync('node build-search-db.js', { stdio: 'inherit' });
+    console.log('✅ Search database built successfully!');
+    return true;
+  } catch (error) {
+    console.error('❌ Error building search database:', error);
+    return false;
+  }
+}
+
 // Function to scrape API metadata from a specific Target Process instance
 async function scrapeApiData(siteUrl, force = false) {
   if (!siteUrl) {
     console.log('⚠️ No site URL provided. Skipping API scraping.');
-    return false;
+    return { success: false, skipped: true };
   }
   
   console.log(`\n🔄 Preparing to scrape API metadata from ${siteUrl}...`);
@@ -179,12 +177,6 @@ async function scrapeApiData(siteUrl, force = false) {
     const siteExists = await fs.stat(siteDir).then(stats => stats.isDirectory()).catch(() => false);
     
     if (siteExists && !force) {
-      const shouldRefresh = await confirm(`API documentation for ${siteName} already exists. Would you like to refresh it?`);
-      if (!shouldRefresh) {
-        console.log('➡️ Skipping API scraping.');
-        return { siteName, success: false, skipped: true };
-      }
-      
       console.log(`🗑️ Removing existing API documentation for ${siteName}...`);
       await fs.rm(siteDir, { recursive: true, force: true });
     }
@@ -206,7 +198,7 @@ async function scrapeApiData(siteUrl, force = false) {
 }
 
 // Function to generate OpenAPI specification
-async function generateOpenApi(siteName, force = false) {
+async function generateOpenApi(siteName) {
   if (!siteName) {
     console.log('⚠️ No site name provided. Skipping OpenAPI generation.');
     return false;
@@ -222,21 +214,6 @@ async function generateOpenApi(siteName, force = false) {
   if (!apiDocsExist) {
     console.error(`❌ Error: API documentation for ${siteName} does not exist. Please scrape the API first.`);
     return false;
-  }
-  
-  // Check if OpenAPI spec already exists
-  try {
-    const specExists = await fs.stat(openApiPath).then(stats => stats.isFile()).catch(() => false);
-    
-    if (specExists && !force) {
-      const shouldRefresh = await confirm(`OpenAPI specification for ${siteName} already exists. Would you like to regenerate it?`);
-      if (!shouldRefresh) {
-        console.log('➡️ Skipping OpenAPI generation.');
-        return false;
-      }
-    }
-  } catch (error) {
-    // File doesn't exist, which is fine
   }
   
   console.log(`🚀 Generating OpenAPI specification for ${siteName}...`);
@@ -257,7 +234,44 @@ async function generateOpenApi(siteName, force = false) {
   }
 }
 
-// Main function to run the interactive scraper
+// Function to handle complete refresh
+async function completeRefresh() {
+  console.log('\n🧹 Performing complete refresh of all documentation...');
+  
+  // Clear all existing data
+  try {
+    await fs.rm(GENERATED_DIR, { recursive: true, force: true });
+    console.log('✅ Removed all existing documentation');
+    await ensureDirectories();
+  } catch (e) {
+    // Might not exist, ignore
+  }
+  
+  // Scrape dev docs
+  const devDocsSuccess = await scrapeDevDocs();
+  
+  // Ask for API site URL
+  const siteUrl = await ask('Enter Target Process site URL for API scraping (or press Enter to skip): ');
+  let apiSiteResult = { success: false, siteName: null };
+  
+  if (siteUrl.trim()) {
+    apiSiteResult = await scrapeApiData(siteUrl);
+  } else {
+    console.log('➡️ Skipping API scraping.');
+  }
+  
+  // Build search database
+  await buildSearchDb();
+  
+  // Generate OpenAPI if API was scraped
+  if (apiSiteResult.success && apiSiteResult.siteName) {
+    await generateOpenApi(apiSiteResult.siteName);
+  }
+  
+  return devDocsSuccess;
+}
+
+// Main function to run the interactive scraper with simplified flow
 async function main() {
   try {
     console.log('📚 Target Process Documentation & API Tool');
@@ -271,90 +285,90 @@ async function main() {
     
     // Display current state
     console.log('\n📊 Current Status:');
-    console.log(`- Dev Documentation: ${existing.devDocs ? '✅ Present' : '❌ Not found'}`);
+    console.log(`- General Documentation: ${existing.devDocs ? '✅ Present' : '❌ Not found'}`);
     console.log(`- API Documentation: ${existing.apiDocs ? '✅ Present' : '❌ Not found'}`);
     console.log(`- OpenAPI Specs: ${existing.openapi ? '✅ Present' : '❌ Not found'}`);
     
-    // Ask what to do
-    console.log('\n🔄 Available Actions:');
+    // Step 1: Ask if user wants a complete refresh
+    const completeRefreshOption = await confirm('\nWould you like to completely clean and refresh all documentation?');
     
-    // 1. General documentation
-    const scrapeDevDocsOption = await confirm('Would you like to scrape general documentation from dev.targetprocess.com?');
+    let success = true;
+    let apiSiteName = null;
     
-    // 2. API documentation
-    const scrapeApiOption = await confirm('Would you like to scrape API documentation from a specific Target Process site?');
-    let siteUrl = null;
-    let siteName = null;
-    
-    if (scrapeApiOption) {
-      siteUrl = await ask('Enter Target Process site URL (e.g., https://example.tpondemand.com): ');
+    if (completeRefreshOption) {
+      // Simple path: complete refresh of everything
+      success = await completeRefresh();
+    } else {
+      // Selective refresh path
       
-      // Validate URL
-      try {
-        const url = new URL(siteUrl);
-        siteName = url.hostname.split('.')[0];
-      } catch (error) {
-        console.error('❌ Invalid URL format. Please provide a valid URL.');
-        rl.close();
-        return;
-      }
-    }
-    
-    // 3. OpenAPI specification
-    let generateOpenApiOption = false;
-    
-    if (scrapeApiOption) {
-      generateOpenApiOption = await confirm('Would you like to generate an OpenAPI specification from the API documentation?');
-    } else if (existing.apiDocs) {
-      generateOpenApiOption = await confirm('Would you like to generate an OpenAPI specification from existing API documentation?');
-      
-      if (generateOpenApiOption) {
-        // Get list of available sites
-        const sites = await fs.readdir(API_DOCS_DIR);
+      // Step 2: Ask about dev.targetprocess.com docs
+      if (await confirm('\nWould you like to scrape general documentation from dev.targetprocess.com?')) {
+        if (existing.devDocs) {
+          console.log('🗑️ Removing existing documentation...');
+          await fs.rm(DEV_DOCS_DIR, { recursive: true, force: true });
+          await fs.mkdir(DEV_DOCS_DIR, { recursive: true });
+        }
         
-        if (sites.length === 0) {
-          console.log('❌ No API documentation found. Please scrape API documentation first.');
-          generateOpenApiOption = false;
-        } else if (sites.length === 1) {
-          siteName = sites[0];
-          console.log(`📁 Using API documentation for site: ${siteName}`);
-        } else {
-          console.log('📁 Available sites:');
-          sites.forEach((site, index) => {
-            console.log(`  ${index + 1}. ${site}`);
-          });
-          
-          const siteIndex = parseInt(await ask('Enter the number of the site to use: '), 10) - 1;
-          
-          if (isNaN(siteIndex) || siteIndex < 0 || siteIndex >= sites.length) {
-            console.error('❌ Invalid selection. Skipping OpenAPI generation.');
-            generateOpenApiOption = false;
-          } else {
-            siteName = sites[siteIndex];
+        const devDocsResult = await scrapeDevDocs();
+        success = success && devDocsResult;
+      }
+      
+      // Step 3: Ask about API documentation
+      if (await confirm('\nWould you like to scrape API documentation from a specific Target Process site?')) {
+        const siteUrl = await ask('Enter Target Process site URL (e.g., https://example.tpondemand.com): ');
+        
+        if (siteUrl.trim()) {
+          // Validate URL
+          try {
+            const url = new URL(siteUrl);
+            const apiResult = await scrapeApiData(siteUrl);
+            success = success && apiResult.success;
+            
+            if (apiResult.success) {
+              apiSiteName = apiResult.siteName;
+            }
+          } catch (error) {
+            console.error('❌ Invalid URL format. Skipping API scraping.');
           }
+        } else {
+          console.log('➡️ No URL provided. Skipping API scraping.');
+        }
+      } else if (existing.apiDocs) {
+        // If we're not scraping API but it exists, get the site name for OpenAPI generation
+        try {
+          const sites = await fs.readdir(API_DOCS_DIR);
+          if (sites.length === 1) {
+            apiSiteName = sites[0];
+          } else if (sites.length > 1) {
+            console.log('\n📁 Available API sites:');
+            sites.forEach((site, index) => {
+              console.log(`  ${index + 1}. ${site}`);
+            });
+            
+            const siteIndex = parseInt(await ask('Enter the number of the site to use (or press Enter to skip): '), 10) - 1;
+            
+            if (!isNaN(siteIndex) && siteIndex >= 0 && siteIndex < sites.length) {
+              apiSiteName = sites[siteIndex];
+            }
+          }
+        } catch (e) {
+          // No sites available
         }
       }
-    }
-    
-    // Execute selected actions
-    let success = true;
-    
-    // 1. Scrape general documentation
-    if (scrapeDevDocsOption) {
-      const devDocsResult = await scrapeDevDocs(false); // Don't force by default
-      success = success && devDocsResult;
-    }
-    
-    // 2. Scrape API documentation
-    if (scrapeApiOption && siteUrl) {
-      const apiResult = await scrapeApiData(siteUrl, false); // Don't force by default
-      success = success && apiResult.success;
-    }
-    
-    // 3. Generate OpenAPI specification
-    if (generateOpenApiOption && siteName) {
-      const openApiResult = await generateOpenApi(siteName, false); // Don't force by default
-      success = success && openApiResult;
+      
+      // Step 4: Ask about rebuilding search database
+      if (existing.devDocs || success) {
+        if (await confirm('\nWould you like to rebuild the search database?')) {
+          const searchDbResult = await buildSearchDb();
+          success = success && searchDbResult;
+        }
+      }
+      
+      // Step 5: Ask about generating OpenAPI spec
+      if (apiSiteName && (await confirm(`\nWould you like to generate an OpenAPI specification for ${apiSiteName}?`))) {
+        const openApiResult = await generateOpenApi(apiSiteName);
+        success = success && openApiResult;
+      }
     }
     
     // Update backward compatibility links

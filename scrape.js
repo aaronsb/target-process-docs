@@ -7,8 +7,22 @@ import path from 'path';
 const nhm = new NodeHtmlMarkdown();
 const baseUrl = 'https://dev.targetprocess.com/docs';
 
+// Initialize the set of processed URLs
+const processedUrls = new Set();
+
 async function fetchAndConvert(url) {
     try {
+        // Check if URL has already been processed to prevent duplicate scraping
+        if (processedUrls.has(url)) {
+            console.log(`Dev Doc Processed: ${url}`);
+            return;
+        }
+        
+        // Mark URL as processed before fetching to prevent parallel duplications
+        processedUrls.add(url);
+        
+        console.log(`Fetching: ${url}`);
+        
         // Fetch the page
         const response = await got(url);
         const html = response.body;
@@ -48,35 +62,45 @@ async function fetchAndConvert(url) {
         // Process each link
         for (const link of links) {
             const fullUrl = new URL(link, baseUrl).toString();
-            if (!processedUrls.has(fullUrl)) {
-                processedUrls.add(fullUrl);
-                await fetchAndConvert(fullUrl);
-            }
+            await fetchAndConvert(fullUrl);
         }
     } catch (error) {
         console.error(`Error processing ${url}:`, error.message);
     }
 }
 
-// Keep track of processed URLs to avoid duplicates
-const processedUrls = new Set();
-
 // Write metadata file with scrape timestamp
 async function writeMetadata() {
     const metadata = {
         lastScraped: new Date().toISOString(),
         baseUrl: baseUrl,
-        totalDocuments: processedUrls.size
+        totalDocuments: processedUrls.size,
+        sourceSystem: 'dev.targetprocess.com'
     };
     
-    await fs.writeFile(
-        'docs/metadata.json',
-        JSON.stringify(metadata, null, 2)
-    );
-    
-    console.log(`\nLast scraped: ${metadata.lastScraped}`);
-    console.log(`Total documents: ${metadata.totalDocuments}`);
-    console.log('\nNote: Please consider waiting between documentation updates to avoid unnecessary load on the server.');
+    try {
+        // Save to 'docs/metadata.json' for direct usage
+        await fs.writeFile(
+            'docs/metadata.json',
+            JSON.stringify(metadata, null, 2)
+        );
+        
+        // Also try to save to the generated directory if it exists
+        try {
+            await fs.writeFile(
+                'generated/dev-docs/metadata.json',
+                JSON.stringify(metadata, null, 2)
+            );
+        } catch (err) {
+            // generated directory might not exist yet, which is fine
+        }
+        
+        console.log(`\nLast scraped: ${metadata.lastScraped}`);
+        console.log(`Total documents: ${metadata.totalDocuments}`);
+        console.log('\nNote: Please consider waiting between documentation updates to avoid unnecessary load on the server.');
+    } catch (error) {
+        console.error('Error writing metadata:', error.message);
+    }
 }
 
 // Start scraping
