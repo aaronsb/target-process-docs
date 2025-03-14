@@ -1,4 +1,6 @@
-# Scraped documentation
+# Generated content
+generated/
+# Legacy paths (kept for backward compatibility)
 docs/
 api-docs/
 
