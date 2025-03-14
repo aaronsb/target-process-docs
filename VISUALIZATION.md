@@ -12,7 +12,7 @@ The visualization system consists of several components working together:
 
 ### 1. Data Extraction Layer
 
-- **Source**: SQLite database (`docs.db`) created by the indexing system
+- **Source**: SQLite database (`generated/database/docs.db`) created by the indexing system
 - **Implementation**: Node.js with sqlite/sqlite3 libraries
 - **Function**: Extracts document, section, and relationship data from the database and transforms it into a graph structure
 
@@ -73,22 +73,37 @@ The data model follows this structure:
   - Filters: Allow focusing on specific node/link types
   - Search: Finds nodes by name
 
+## Optimal Visualization Setup
+
+This visualization tool uses a special combination of components that provides an optimal visualization experience:
+
+1. **Initial Visualization Code**: The original 3D visualization tool
+2. **Advanced Database Generator**: The latest database generator with categorization support
+
+This setup combines:
+- The simplicity and performance of the initial visualization code
+- The advanced categorization features of the latest database generator
+
 ## Usage
 
 ### Running the Visualization
 
 ```bash
 # Basic usage
-./visualize-docs.sh
+node tp-docs.js
+# Then select the visualization option
+
+# Or use the direct script
+node visualize-graph.js
 
 # Specify a different database file
-./visualize-docs.sh --db custom-docs.db
+node visualize-graph.js --db generated/database/docs.db
 
 # Specify a different port
-./visualize-docs.sh --port 3000
+node visualize-graph.js --port 3000
 
 # Combine options
-./visualize-docs.sh --db custom-docs.db --port 3000
+node visualize-graph.js --db generated/database/docs.db --port 3000
 ```
 
 ### User Interface
@@ -114,8 +129,7 @@ The visualization interface provides several controls:
 ### Files
 
 - `visualize-graph.js`: Main Node.js script that extracts data and serves the visualization
-- `visualization/index.html`: Frontend interface for the 3D graph
-- `visualize-docs.sh`: Shell script to run the visualization tool
+- `generated/visualization/index.html`: Frontend interface for the 3D graph
 
 ### Dependencies
 
@@ -166,6 +180,15 @@ The visualization works with the following database tables:
   - category: Primary category name
   - category_score: Relevance score
 
+### Categories
+The database categorizes content into these categories:
+1. Data Management
+2. Integration
+3. Process Control
+4. System
+5. UI Components
+6. User Management
+
 ### Category-Based Relationships
 
 The visualization creates meaningful relationships between documents and sections based on content categorization:
@@ -210,6 +233,6 @@ Potential improvements for the visualization tool:
 Common issues and solutions:
 
 - **Port already in use**: The tool will automatically try the next available port
-- **Database not found**: Ensure you've run `./refresh-docs.sh` to create the database
+- **Database not found**: Ensure you've run `node tp-docs.js` to create the database
 - **Empty visualization**: Check that the database contains documents, sections, and relationships
 - **Performance issues**: Reduce the number of displayed nodes using filters

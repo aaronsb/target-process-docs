@@ -18,6 +18,8 @@ const GENERATED_DIR = 'generated';
 const DEV_DOCS_DIR = path.join(GENERATED_DIR, 'dev-docs');
 const API_DOCS_DIR = path.join(GENERATED_DIR, 'api-docs');
 const OPENAPI_DIR = path.join(GENERATED_DIR, 'openapi');
+const DATABASE_DIR = path.join(GENERATED_DIR, 'database');
+const VISUALIZATION_DIR = path.join(GENERATED_DIR, 'visualization');
 
 // Utility to ask a question and get response
 function ask(question) {
@@ -41,6 +43,8 @@ async function ensureDirectories() {
     await fs.mkdir(DEV_DOCS_DIR, { recursive: true });
     await fs.mkdir(API_DOCS_DIR, { recursive: true });
     await fs.mkdir(OPENAPI_DIR, { recursive: true });
+    await fs.mkdir(DATABASE_DIR, { recursive: true });
+    await fs.mkdir(VISUALIZATION_DIR, { recursive: true });
     console.log(`✅ Created output directories in ${GENERATED_DIR}/`);
   } catch (error) {
     console.error('Error creating directories:', error);
@@ -87,57 +91,17 @@ async function checkExistingContent() {
   }
 }
 
-// Update symbolic links for backward compatibility
-async function updateBackwardCompatibility() {
-  try {
-    // Create symlinks for backward compatibility with legacy paths
-    // First remove any existing symlinks/directories
-    try {
-      await fs.rm('docs', { recursive: true, force: true });
-      console.log('✅ Removed legacy docs directory');
-    } catch (e) {
-      // Might not exist, ignore
-    }
-
-    try {
-      await fs.rm('api-docs', { recursive: true, force: true });
-      console.log('✅ Removed legacy api-docs directory');
-    } catch (e) {
-      // Might not exist, ignore
-    }
-
-    // Create symbolic links
-    await fs.symlink(DEV_DOCS_DIR, 'docs', 'dir');
-    console.log('✅ Created symbolic link from docs -> generated/dev-docs');
-    
-    await fs.symlink(API_DOCS_DIR, 'api-docs', 'dir');
-    console.log('✅ Created symbolic link from api-docs -> generated/api-docs');
-  } catch (error) {
-    console.error('⚠️ Warning: Failed to create backward compatibility links:', error.message);
-    console.log('You may need to manually delete the docs and api-docs directories if they exist.');
-  }
-}
+// This function has been removed as backward compatibility is no longer needed
 
 // Function to scrape general documentation from dev.targetprocess.com
 async function scrapeDevDocs(force = false) {
   console.log('\n🔄 Scraping documentation from dev.targetprocess.com...');
   
-  // Make sure the legacy path is removed for clean scraping
-  try {
-    await fs.rm('docs', { recursive: true, force: true });
-  } catch (e) {
-    // Might not exist, ignore
-  }
-  
   console.log('🚀 Running general documentation scraper...');
   
-  // Create a direct path for the scraper to use instead of symlink during scraping
-  // This prevents duplicate scraping issues by ensuring a clean target directory
-  await fs.mkdir('docs', { recursive: true });
-  
   try {
-    // Run the scraper
-    execSync('node scrape.js', { stdio: 'inherit' });
+    // Run the scraper with the new directory structure
+    execSync(`node scrape.js --output-dir ${DEV_DOCS_DIR}`, { stdio: 'inherit' });
     console.log('✅ Documentation scraping completed successfully!');
     return true;
   } catch (error) {
@@ -268,6 +232,11 @@ async function completeRefresh() {
     await generateOpenApi(apiSiteResult.siteName);
   }
   
+  // Ask about visualization
+  if (await confirm('\nWould you like to visualize the documentation relationships?')) {
+    await runVisualization();
+  }
+  
   return devDocsSuccess;
 }
 
@@ -369,14 +338,20 @@ async function main() {
         const openApiResult = await generateOpenApi(apiSiteName);
         success = success && openApiResult;
       }
+      
+      // Step 6: Ask about visualization
+      if (await confirm('\nWould you like to visualize the documentation relationships?')) {
+        await runVisualization();
+      }
     }
-    
-    // Update backward compatibility links
-    await updateBackwardCompatibility();
     
     console.log('\n📋 Summary:');
     console.log(`- Generated content located in: ${path.resolve(GENERATED_DIR)}/`);
-    console.log('- Backward compatibility links created for legacy paths');
+    console.log(`  ├── dev-docs/: General documentation`);
+    console.log(`  ├── api-docs/: Site-specific API documentation`);
+    console.log(`  ├── openapi/: OpenAPI specifications`);
+    console.log(`  ├── database/: Search database and metadata`);
+    console.log(`  └── visualization/: Visualization assets`);
     
     if (success) {
       console.log('\n✅ All requested operations completed successfully!');
@@ -396,8 +371,32 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   main();
 }
 
+// Function to run the visualization tool
+async function runVisualization() {
+  console.log('\n🔄 Starting visualization server...');
+  
+  try {
+    // Check if database exists
+    try {
+      await fs.access(path.join(DATABASE_DIR, 'docs.db'));
+    } catch (error) {
+      console.error('❌ Error: Search database not found!');
+      console.error('Run the documentation scraper and build the search database first.');
+      return false;
+    }
+    
+    // Run the visualization tool
+    execSync('node visualize-graph.js', { stdio: 'inherit' });
+    return true;
+  } catch (error) {
+    console.error('❌ Error starting visualization server:', error);
+    return false;
+  }
+}
+
 export { 
   scrapeDevDocs, 
   scrapeApiData, 
-  generateOpenApi 
+  generateOpenApi,
+  runVisualization
 };

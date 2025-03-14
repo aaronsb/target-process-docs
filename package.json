@@ -7,7 +7,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node tp-docs.js",
-    "dev-docs": "node scrape.js",
+    "dev-docs": "node scrape.js --output-dir generated/dev-docs",
     "build-search": "node build-search-db.js",
     "visualize": "node visualize-graph.js",
     "api-scrape": "node site-api-scraper.js",

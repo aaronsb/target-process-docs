@@ -3,10 +3,19 @@ import { open } from 'sqlite';
 import fs from 'fs/promises';
 import path from 'path';
 
+// Define directory structure
+const GENERATED_DIR = 'generated';
+const DEV_DOCS_DIR = path.join(GENERATED_DIR, 'dev-docs');
+const DATABASE_DIR = path.join(GENERATED_DIR, 'database');
+const DATABASE_PATH = path.join(DATABASE_DIR, 'docs.db');
+
 // Initialize database
 async function initializeDb() {
+    // Ensure database directory exists
+    await fs.mkdir(DATABASE_DIR, { recursive: true });
+    
     const db = await open({
-        filename: 'docs.db',
+        filename: DATABASE_PATH,
         driver: sqlite3.Database
     });
 
@@ -186,7 +195,11 @@ async function processAllFiles(db) {
     for (const [category, terms] of Object.entries(keywordCategories)) {
         categoryPatterns[category] = new RegExp('\\b(' + terms.join('|') + ')\\b', 'gi');
     }
-    const files = await fs.readdir('docs');
+    
+    // Ensure dev docs directory exists
+    await fs.mkdir(DEV_DOCS_DIR, { recursive: true });
+    
+    const files = await fs.readdir(DEV_DOCS_DIR);
     const markdownFiles = files.filter(file => file.endsWith('.md'));
 
     console.log(`Found ${markdownFiles.length} markdown files to process...`);
@@ -199,10 +212,10 @@ async function processAllFiles(db) {
     
     // Process each file
     for (const file of markdownFiles) {
-        const filePath = path.join('docs', file);
+        const filePath = path.join(DEV_DOCS_DIR, file);
         try {
             const content = await fs.readFile(filePath, 'utf-8');
-            const relativePath = path.relative('docs', filePath);
+            const relativePath = path.relative(DEV_DOCS_DIR, filePath);
             const title = extractTitle(content);
             const links = findInternalLinks(content);
             const sections = extractSections(content);

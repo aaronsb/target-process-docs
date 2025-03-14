@@ -1,8 +1,5 @@
 # Generated content
 generated/
-# Legacy paths (kept for backward compatibility)
-docs/
-api-docs/
 
 # Dependencies
 node_modules/
@@ -13,6 +10,3 @@ package-lock.json
 
 # Editor files
 .obsidian/
-
-# SQLite database
-docs.db

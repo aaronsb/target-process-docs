@@ -4,10 +4,16 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
-import fs from 'fs';
+import fs from 'fs/promises';
 import * as openBrowser from 'open';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
+
+// Define directory structure
+const GENERATED_DIR = 'generated';
+const DATABASE_DIR = join(GENERATED_DIR, 'database');
+const VISUALIZATION_DIR = join(GENERATED_DIR, 'visualization');
+const DEFAULT_DB_PATH = join(DATABASE_DIR, 'docs.db');
 
 // Main async function to allow top-level await
 async function main() {
@@ -17,7 +23,7 @@ async function main() {
       alias: 'd',
       description: 'Path to SQLite database file',
       type: 'string',
-      default: 'docs.db'
+      default: DEFAULT_DB_PATH
     })
     .option('port', {
       alias: 'p',
@@ -33,9 +39,11 @@ async function main() {
   const __dirname = dirname(fileURLToPath(import.meta.url));
 
   // Check if database exists
-  if (!fs.existsSync(argv.db)) {
+  try {
+    await fs.access(argv.db);
+  } catch (error) {
     console.error(`Error: Database file '${argv.db}' not found.`);
-    console.error('Run ./refresh-docs.sh first to build the documentation and search index.');
+    console.error('Run node tp-docs.js first to build the documentation and search index.');
     process.exit(1);
   }
 
@@ -161,8 +169,31 @@ async function main() {
   // Create Express app
   const app = express();
 
+  // Ensure visualization directory exists and copy template files
+  try {
+    await fs.mkdir(VISUALIZATION_DIR, { recursive: true });
+    
+    // Copy template files from source to generated directory
+    const sourceDir = join(process.cwd(), 'visualization');
+    const sourceFiles = await fs.readdir(sourceDir);
+    
+    for (const file of sourceFiles) {
+      const sourcePath = join(sourceDir, file);
+      const destPath = join(VISUALIZATION_DIR, file);
+      
+      // Check if it's a file (not a directory)
+      const stats = await fs.stat(sourcePath);
+      if (stats.isFile()) {
+        await fs.copyFile(sourcePath, destPath);
+        console.log(`Copied template file: ${file}`);
+      }
+    }
+  } catch (error) {
+    console.error(`Error setting up visualization directory: ${error.message}`);
+  }
+
   // Serve static files from the visualization directory
-  app.use(express.static(join(__dirname, 'visualization')));
+  app.use(express.static(VISUALIZATION_DIR));
 
   // API endpoint to get graph data
   app.get('/api/graph-data', async (req, res) => {
@@ -177,7 +208,7 @@ async function main() {
 
   // Serve the main HTML file
   app.get('/', (req, res) => {
-    res.sendFile(join(__dirname, 'visualization', 'index.html'));
+    res.sendFile(join(process.cwd(), VISUALIZATION_DIR, 'index.html'));
   });
 
   // Function to start the server with port fallback
