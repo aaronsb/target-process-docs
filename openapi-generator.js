@@ -97,7 +97,7 @@ async function generateOpenApiSpec(siteName) {
                 }
                 
                 // Process resource into OpenAPI components
-                processResourceForOpenApi(resourceData, resourceName, openApiSpec, resource.$.Description);
+                await processResourceForOpenApi(resourceData, resourceName, openApiSpec, resource.$.Description);
                 
             } catch (error) {
                 console.error(`Error processing ${resourceName} for OpenAPI:`, error.message);
@@ -135,9 +135,19 @@ async function generateOpenApiSpec(siteName) {
     }
 }
 
-function processResourceForOpenApi(resourceData, resourceName, openApiSpec, description) {
+async function processResourceForOpenApi(resourceData, resourceName, openApiSpec, description) {
     // Add schema component
-    const properties = extractProperties(resourceData);
+    const properties = await extractProperties(resourceData, resourceName);
+    
+    // Determine which properties are required
+    const requiredProperties = [];
+    for (const [propName, propDef] of Object.entries(properties)) {
+        if (propDef.required === true) {
+            requiredProperties.push(propName);
+            // Remove the required flag from the property definition as it's moved to the schema level
+            delete propDef.required;
+        }
+    }
     
     openApiSpec.components.schemas[resourceName] = {
         type: 'object',
@@ -145,39 +155,228 @@ function processResourceForOpenApi(resourceData, resourceName, openApiSpec, desc
         properties: properties
     };
     
+    // Add required properties if any exist
+    if (requiredProperties.length > 0) {
+        openApiSpec.components.schemas[resourceName].required = requiredProperties;
+    }
+    
     // Add paths for standard operations
     addResourcePaths(resourceName, openApiSpec, properties);
 }
 
-function extractProperties(resourceData) {
+async function extractProperties(resourceData, resourceName) {
     // This function extracts property definitions from the resource metadata
     const properties = {};
     
-    if (resourceData.ResourceMetadataDescription && 
-        resourceData.ResourceMetadataDescription.Properties && 
-        resourceData.ResourceMetadataDescription.Properties.length > 0 &&
-        resourceData.ResourceMetadataDescription.Properties[0].Property) {
+    try {
+        // Get the site name from the current working directory structure
+        const currentDir = process.cwd();
+        const siteDir = path.join('api-docs');
+        const generatedSiteDir = path.join('generated/api-docs');
         
-        for (const prop of resourceData.ResourceMetadataDescription.Properties[0].Property) {
-            const name = prop.$.Name;
-            const type = mapType(prop.$.Type);
-            const description = prop.$.Description || '';
-            
-            properties[name] = {
-                type: type.type,
-                description: description
-            };
-            
-            // Add format if available
-            if (type.format) {
-                properties[name].format = type.format;
+        // Find all site directories
+        const siteDirs = [];
+        try {
+            const sites = await fs.readdir(siteDir);
+            for (const site of sites) {
+                const sitePath = path.join(siteDir, site);
+                const stats = await fs.stat(sitePath);
+                if (stats.isDirectory()) {
+                    siteDirs.push({ name: site, path: sitePath });
+                }
             }
-            
-            // Handle enum types
-            if (prop.$.IsEnum === 'true' && prop.EnumValues && prop.EnumValues.length > 0 && prop.EnumValues[0].Value) {
-                properties[name].enum = prop.EnumValues[0].Value.map(v => v._);
+        } catch (error) {
+            console.warn(`Could not read site directories: ${error.message}`);
+        }
+        
+        // Find the site directory that contains the resource metadata
+        let siteName = null;
+        for (const site of siteDirs) {
+            const resourcePath = path.join(site.path, 'resources', `${resourceName}.json`);
+            try {
+                await fs.access(resourcePath);
+                siteName = site.name;
+                break;
+            } catch (error) {
+                // Resource not found in this site, continue
             }
         }
+        
+        if (!siteName) {
+            console.warn(`Could not determine site name for resource ${resourceName}`);
+            // Fall back to basic metadata
+        } else {
+            // First try to load the detailed metadata file
+            const detailedMetadataPath = path.join(siteDir, siteName, 'resources', `${resourceName}-meta.json`);
+            const generatedDetailedMetadataPath = path.join(generatedSiteDir, siteName, 'resources', `${resourceName}-meta.json`);
+            
+            let detailedMetadata = null;
+            
+            try {
+                // Try to read from the legacy path first
+                detailedMetadata = JSON.parse(
+                    await fs.readFile(detailedMetadataPath, 'utf-8')
+                );
+            } catch (error) {
+                try {
+                    // If that fails, try the generated path
+                    detailedMetadata = JSON.parse(
+                        await fs.readFile(generatedDetailedMetadataPath, 'utf-8')
+                    );
+                } catch (error2) {
+                    // If both fail, we'll fall back to the basic metadata
+                    console.warn(`Detailed metadata not found for ${resourceName}, falling back to basic metadata`);
+                }
+            }
+            
+            if (detailedMetadata && detailedMetadata.ResourceMetadataDescription) {
+            // Process detailed metadata
+            const metadata = detailedMetadata.ResourceMetadataDescription;
+            
+            // Process simple properties
+            if (metadata.ResourceMetadataPropertiesDescription && 
+                metadata.ResourceMetadataPropertiesDescription.length > 0 &&
+                metadata.ResourceMetadataPropertiesDescription[0].ResourceMetadataPropertiesResourceValuesDescription &&
+                metadata.ResourceMetadataPropertiesDescription[0].ResourceMetadataPropertiesResourceValuesDescription.length > 0) {
+                
+                const simpleProps = metadata.ResourceMetadataPropertiesDescription[0].ResourceMetadataPropertiesResourceValuesDescription[0].ResourceFieldMetadataDescription;
+                
+                if (Array.isArray(simpleProps)) {
+                    for (const prop of simpleProps) {
+                        const name = prop.$.Name;
+                        const type = mapType(prop.$.Type);
+                        const description = prop.$.Description || '';
+                        const isRequired = prop.$.IsRequired === 'true';
+                        const canSet = prop.$.CanSet === 'true';
+                        const canGet = prop.$.CanGet === 'true';
+                        const isDeprecated = prop.$.IsDeprecated === 'true';
+                        
+                        properties[name] = {
+                            type: type.type,
+                            description: description,
+                            required: isRequired,
+                            readOnly: !canSet && canGet,
+                            deprecated: isDeprecated
+                        };
+                        
+                        // Add format if available
+                        if (type.format) {
+                            properties[name].format = type.format;
+                        }
+                    }
+                }
+            }
+            
+            // Process reference properties (complex types)
+            if (metadata.ResourceMetadataPropertiesDescription && 
+                metadata.ResourceMetadataPropertiesDescription.length > 0 &&
+                metadata.ResourceMetadataPropertiesDescription[0].ResourceMetadataPropertiesResourceReferencesDescription &&
+                metadata.ResourceMetadataPropertiesDescription[0].ResourceMetadataPropertiesResourceReferencesDescription.length > 0) {
+                
+                const refProps = metadata.ResourceMetadataPropertiesDescription[0].ResourceMetadataPropertiesResourceReferencesDescription[0].ResourceFieldMetadataDescription;
+                
+                if (Array.isArray(refProps)) {
+                    for (const prop of refProps) {
+                        const name = prop.$.Name;
+                        const refType = prop.$.Type;
+                        const description = prop.$.Description || '';
+                        const isRequired = prop.$.IsRequired === 'true';
+                        const canSet = prop.$.CanSet === 'true';
+                        const canGet = prop.$.CanGet === 'true';
+                        const isDeprecated = prop.$.IsDeprecated === 'true';
+                        
+                        properties[name] = {
+                            type: 'object',
+                            description: `${description} (Reference to ${refType})`,
+                            required: isRequired,
+                            readOnly: !canSet && canGet,
+                            deprecated: isDeprecated,
+                            properties: {
+                                id: {
+                                    type: 'integer',
+                                    format: 'int32',
+                                    description: `ID of the referenced ${refType}`
+                                }
+                            }
+                        };
+                    }
+                }
+            }
+            
+            // Process collection properties
+            if (metadata.ResourceMetadataPropertiesDescription && 
+                metadata.ResourceMetadataPropertiesDescription.length > 0 &&
+                metadata.ResourceMetadataPropertiesDescription[0].ResourceMetadataPropertiesResourceCollectionsDescription &&
+                metadata.ResourceMetadataPropertiesDescription[0].ResourceMetadataPropertiesResourceCollectionsDescription.length > 0) {
+                
+                const collProps = metadata.ResourceMetadataPropertiesDescription[0].ResourceMetadataPropertiesResourceCollectionsDescription[0].ResourceCollecitonFieldMetadataDescription;
+                
+                if (Array.isArray(collProps)) {
+                    for (const prop of collProps) {
+                        const name = prop.$.Name;
+                        const collType = prop.$.Type;
+                        const description = prop.$.Description || '';
+                        const isRequired = prop.$.IsRequired === 'true';
+                        const canSet = prop.$.CanSet === 'true';
+                        const canGet = prop.$.CanGet === 'true';
+                        const isDeprecated = prop.$.IsDeprecated === 'true';
+                        const canAdd = prop.$.CanAdd === 'true';
+                        const canRemove = prop.$.CanRemove === 'true';
+                        
+                        properties[name] = {
+                            type: 'array',
+                            description: `${description} (Collection of ${collType})`,
+                            required: isRequired,
+                            readOnly: !canSet && canGet,
+                            deprecated: isDeprecated,
+                            items: {
+                                type: 'object',
+                                properties: {
+                                    id: {
+                                        type: 'integer',
+                                        format: 'int32',
+                                        description: `ID of the ${collType} item`
+                                    }
+                                }
+                            }
+                        };
+                    }
+                }
+            }
+        } else {
+            // Fall back to basic metadata if detailed metadata is not available
+            if (resourceData.ResourceMetadataDescription && 
+                resourceData.ResourceMetadataDescription.Properties && 
+                resourceData.ResourceMetadataDescription.Properties.length > 0 &&
+                resourceData.ResourceMetadataDescription.Properties[0].Property) {
+                
+                for (const prop of resourceData.ResourceMetadataDescription.Properties[0].Property) {
+                    const name = prop.$.Name;
+                    const type = mapType(prop.$.Type);
+                    const description = prop.$.Description || '';
+                    const isRequired = prop.$.IsRequired === 'true';
+                    
+                    properties[name] = {
+                        type: type.type,
+                        description: description,
+                        required: isRequired
+                    };
+                    
+                    // Add format if available
+                    if (type.format) {
+                        properties[name].format = type.format;
+                    }
+                    
+                    // Handle enum types
+                    if (prop.$.IsEnum === 'true' && prop.EnumValues && prop.EnumValues.length > 0 && prop.EnumValues[0].Value) {
+                        properties[name].enum = prop.EnumValues[0].Value.map(v => v._);
+                    }
+                }
+            }
+        }
+        }
+    } catch (error) {
+        console.error(`Error extracting properties for ${resourceName}:`, error.message);
     }
     
     return properties;

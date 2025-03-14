@@ -144,8 +144,59 @@ async function scrapeResourceMetadata(resource, siteDir, siteUrl) {
             markdown
         );
         
+        // Fetch detailed metadata from the /meta endpoint
+        await scrapeDetailedMetadata(resourceName, resourceUri, siteDir, generatedSiteDir, siteUrl);
+        
     } catch (error) {
         console.error(`Error processing ${resourceName}:`, error.message);
+    }
+}
+
+// Function to fetch and process detailed metadata from the /meta endpoint
+async function scrapeDetailedMetadata(resourceName, resourceUri, siteDir, generatedSiteDir, siteUrl) {
+    try {
+        // The resource URI already points to the collection endpoint
+        // For the metadata endpoint, we just need to append /meta to the collection URI
+        // Example: /api/v1/AcceptanceCriterions -> /api/v1/AcceptanceCriterions/meta
+        
+        // Check if the resourceUri already ends with /meta
+        // If it does, use it as is; otherwise, append /meta
+        const metaUrl = resourceUri.endsWith('/meta') || resourceUri.endsWith('/meta/') 
+            ? resourceUri 
+            : (resourceUri.endsWith('/') ? `${resourceUri}meta` : `${resourceUri}/meta`);
+        
+        console.log(`Fetching detailed metadata from ${metaUrl}...`);
+        
+        // Fetch detailed metadata
+        const response = await got(metaUrl);
+        
+        // Save raw metadata to both locations
+        await fs.writeFile(
+            path.join(siteDir, 'resources', `${resourceName}-meta.xml`),
+            response.body
+        );
+        await fs.writeFile(
+            path.join(generatedSiteDir, 'resources', `${resourceName}-meta.xml`),
+            response.body
+        );
+        
+        // Parse XML
+        const result = await promisifyXmlParse(response.body);
+        
+        // Save JSON version to both locations
+        await fs.writeFile(
+            path.join(siteDir, 'resources', `${resourceName}-meta.json`),
+            JSON.stringify(result, null, 2)
+        );
+        await fs.writeFile(
+            path.join(generatedSiteDir, 'resources', `${resourceName}-meta.json`),
+            JSON.stringify(result, null, 2)
+        );
+        
+        console.log(`✅ Detailed metadata for ${resourceName} saved successfully`);
+        
+    } catch (error) {
+        console.error(`Error fetching detailed metadata for ${resourceName}:`, error.message);
     }
 }
 
