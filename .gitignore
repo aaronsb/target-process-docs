@@ -1,5 +1,6 @@
 # Scraped documentation
 docs/
+api-docs/
 
 # Dependencies
 node_modules/

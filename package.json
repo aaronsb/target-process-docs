@@ -8,7 +8,9 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node scrape.js",
     "build-search": "node build-search-db.js",
-    "visualize": "node visualize-graph.js"
+    "visualize": "node visualize-graph.js",
+    "api-scrape": "node site-api-scraper.js",
+    "generate-openapi": "node openapi-generator.js"
   },
   "keywords": [
     "documentation",
@@ -27,6 +29,7 @@
     "open": "^10.1.0",
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7",
+    "xml2js": "^0.6.2",
     "yargs": "^17.7.2"
   },
   "optionalDependencies": {

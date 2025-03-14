@@ -1,0 +1,226 @@
+<?xml-stylesheet type='text/xsl' xmlns='http://www.w3.org/1999/xhtml' href='../xslt/ResourceMetadataDescriptionIndex.xsl'?>
+<ResourceMetadataDescriptionIndex IndexUri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/index/meta">
+  <ResourceMetadataDescription Name="AcceptanceCriterion" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/AcceptanceCriterions/meta" Description="Custom AcceptanceCriterion (Assignable) entity" />
+  <ResourceMetadataDescription Name="ActionItem" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/ActionItems/meta" Description="Custom ActionItem (Assignable) entity" />
+  <ResourceMetadataDescription Name="ActionItemFeedback" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/ActionItemFeedbacks/meta" Description="Custom ActionItemFeedback entity" />
+  <ResourceMetadataDescription Name="AgileReleaseTrain" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/AgileReleaseTrains/meta" Description="Custom AgileReleaseTrain (Assignable) entity" />
+  <ResourceMetadataDescription Name="AgileReleaseTrainUser" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/AgileReleaseTrainUsers/meta" Description="Custom AgileReleaseTrainUser entity" />
+  <ResourceMetadataDescription Name="AnnualBudget" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/AnnualBudgets/meta" Description="Custom AnnualBudget (Assignable) entity" />
+  <ResourceMetadataDescription Name="Application" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Applications/meta" Description="Custom Application (Assignable) entity" />
+  <ResourceMetadataDescription Name="ApplicationFeature" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/ApplicationFeatures/meta" Description="Custom ApplicationFeature entity" />
+  <ResourceMetadataDescription Name="Approval" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Approvals/meta" Description="Custom Approval (Assignable) entity" />
+  <ResourceMetadataDescription Name="Assignable" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Assignables/meta" Description="Base entity for Epic, Feature, User Story, Task, Bug, Test Plan, Test Plan Run, Request. It can be assigned to people and has workflow." />
+  <ResourceMetadataDescription Name="AssignedEffort" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/AssignedEfforts/meta" Description="Effort for Assignable by Role and User." />
+  <ResourceMetadataDescription Name="Assignment" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Assignments/meta" Description="An assignment of the User Story, Task, Bug, etc. with a specific Role and user." />
+  <ResourceMetadataDescription Name="Attachment" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Attachments/meta" Description="A file (image, archive, whatever) attached to Entity." />
+  <ResourceMetadataDescription Name="Availability" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Availabilities/meta" Description="Custom Availability (Assignable) entity" />
+  <ResourceMetadataDescription Name="Brand" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Brands/meta" Description="Custom Brand (Assignable) entity" />
+  <ResourceMetadataDescription Name="Budget" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Budgets/meta" Description="Custom Budget (Assignable) entity" />
+  <ResourceMetadataDescription Name="BudgetAllocation" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/BudgetAllocations/meta" Description="Custom BudgetAllocation (Assignable) entity" />
+  <ResourceMetadataDescription Name="Bug" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Bugs/meta" Description="Bug or defect (error, flaw, mistake, failure or fault in a computer program). Can relate to User Story. Can be assigned to Release and Iteration." />
+  <ResourceMetadataDescription Name="Build" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Builds/meta" Description="Build in a project. Bugs and source code Revisions can be assigned to Build." />
+  <ResourceMetadataDescription Name="BusinessOutcome" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/BusinessOutcomes/meta" Description="Custom BusinessOutcome (Assignable) entity" />
+  <ResourceMetadataDescription Name="BusinessUnit" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/BusinessUnits/meta" Description="Custom BusinessUnit (Assignable) entity" />
+  <ResourceMetadataDescription Name="Comment" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Comments/meta" Description="Can be added to almost any Entity." />
+  <ResourceMetadataDescription Name="Company" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Companies/meta" Description="Used to limit Requests visibility in Help Desk. Requesters from Company A will not see Requests from Company B." />
+  <ResourceMetadataDescription Name="Component" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Components/meta" Description="Custom Component (Assignable) entity" />
+  <ResourceMetadataDescription Name="ComponentEpic" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/ComponentEpics/meta" Description="Custom ComponentEpic entity" />
+  <ResourceMetadataDescription Name="ComponentFeature" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/ComponentFeatures/meta" Description="Custom ComponentFeature entity" />
+  <ResourceMetadataDescription Name="ComponentPortfolioEpic" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/ComponentPortfolioEpics/meta" Description="Custom ComponentPortfolioEpic entity" />
+  <ResourceMetadataDescription Name="ComponentProduct" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/ComponentProducts/meta" Description="Custom ComponentProduct entity" />
+  <ResourceMetadataDescription Name="ComponentVersion" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/ComponentVersions/meta" Description="Custom ComponentVersion (Assignable) entity" />
+  <ResourceMetadataDescription Name="ComponentVersionProductVersion" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/ComponentVersionProductVersions/meta" Description="Custom ComponentVersionProductVersion entity" />
+  <ResourceMetadataDescription Name="ComponentWaterfallProject" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/ComponentWaterfallProjects/meta" Description="Custom ComponentWaterfallProject entity" />
+  <ResourceMetadataDescription Name="Context" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Context/meta" Description="Context contains information about logged User, Culture, selected Projects and Processes." />
+  <ResourceMetadataDescription Name="Cost" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Costs/meta" Description="Custom Cost (Assignable) entity" />
+  <ResourceMetadataDescription Name="CostAnnualBudget" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/CostAnnualBudgets/meta" Description="Custom CostAnnualBudget entity" />
+  <ResourceMetadataDescription Name="CostBudget" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/CostBudgets/meta" Description="Custom CostBudget entity" />
+  <ResourceMetadataDescription Name="CostMonthlyBudget" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/CostMonthlyBudgets/meta" Description="Custom CostMonthlyBudget entity" />
+  <ResourceMetadataDescription Name="CostPerPoint" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/CostPerPoints/meta" Description="Custom CostPerPoint (Assignable) entity" />
+  <ResourceMetadataDescription Name="CostQuarterlyBudget" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/CostQuarterlyBudgets/meta" Description="Custom CostQuarterlyBudget entity" />
+  <ResourceMetadataDescription Name="CustomActivity" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/CustomActivities/meta" Description="Special type of work you can track Time against." />
+  <ResourceMetadataDescription Name="CustomField" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/CustomFields/meta" Description="Custom field is an entity extension which is declared on a process level. As a result entity can contain declared custom field values. Custom fields has following types: Text, DropDown, CheckBox, Url, Date, RichText, Number, Entity. See reference for more details." />
+  <ResourceMetadataDescription Name="CustomRule" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/CustomRules/meta" Description="Custom business rules defined by user." />
+  <ResourceMetadataDescription Name="DayPeriod" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/DayPeriods/meta" Description="Custom DayPeriod (Assignable) entity" />
+  <ResourceMetadataDescription Name="DefinitionOfDone" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/DefinitionOfDones/meta" Description="Custom DefinitionOfDone (Assignable) entity" />
+  <ResourceMetadataDescription Name="Demand" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Demands/meta" Description="Custom Demand (Assignable) entity" />
+  <ResourceMetadataDescription Name="DemandMonthlyBudget" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/DemandMonthlyBudgets/meta" Description="Custom DemandMonthlyBudget entity" />
+  <ResourceMetadataDescription Name="Department" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Departments/meta" Description="Custom Department (Assignable) entity" />
+  <ResourceMetadataDescription Name="Dependency" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Dependencies/meta" Description="Custom Dependency (Assignable) entity" />
+  <ResourceMetadataDescription Name="EntityPermission" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/EntityPermissions/meta" Description="Container for entity permissions" />
+  <ResourceMetadataDescription Name="EntityState" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/EntityStates/meta" Description="State of Entity. Collection of EntityStates form Workflow for Entity. For example, Bug has four EntityStates by default: Open, Fixed, Invalid and Done." />
+  <ResourceMetadataDescription Name="EntityType" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/EntityTypes/meta" Description="Type of Entity. For example: Bug, TestCase, Project." />
+  <ResourceMetadataDescription Name="Epic" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Epics/meta" Description="A high-level scope of work which contains Features. Can be assigned to Release. Can't be assigned to Iteration." />
+  <ResourceMetadataDescription Name="EpicAgileReleaseTrain" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/EpicAgileReleaseTrains/meta" Description="Custom EpicAgileReleaseTrain entity" />
+  <ResourceMetadataDescription Name="Expense" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Expenses/meta" Description="Custom Expense (Assignable) entity" />
+  <ResourceMetadataDescription Name="ExpenseAnnualBudget" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/ExpenseAnnualBudgets/meta" Description="Custom ExpenseAnnualBudget entity" />
+  <ResourceMetadataDescription Name="ExpenseBudget" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/ExpenseBudgets/meta" Description="Custom ExpenseBudget entity" />
+  <ResourceMetadataDescription Name="ExpenseMonthlyBudget" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/ExpenseMonthlyBudgets/meta" Description="Custom ExpenseMonthlyBudget entity" />
+  <ResourceMetadataDescription Name="ExpenseQuarterlyBudget" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/ExpenseQuarterlyBudgets/meta" Description="Custom ExpenseQuarterlyBudget entity" />
+  <ResourceMetadataDescription Name="Expertise" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Expertises/meta" Description="Custom Expertise (Assignable) entity" />
+  <ResourceMetadataDescription Name="Feature" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Features/meta" Description="A high-level requirement which contains user stories. Can be assigned to Release. Can't be assigned to Iteration." />
+  <ResourceMetadataDescription Name="Feedback" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Feedbacks/meta" Description="Custom Feedback (Assignable) entity" />
+  <ResourceMetadataDescription Name="General" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Generals/meta" Description="Base entity for Assignable, Build, Impediment, Iteration, Program, Project, Release, Test Case, Test Plan, Bug, Feature, Request, Task, Test Plan Run, User Story." />
+  <ResourceMetadataDescription Name="GeneralFollower" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/GeneralFollowers/meta" Description="Relation between user and following entity." />
+  <ResourceMetadataDescription Name="GeneralUser" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/GeneralUsers/meta" Description="Base entity for User and Requester." />
+  <ResourceMetadataDescription Name="GlobalSettings" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/GlobalSettings/meta" Description="Global Application Settings." />
+  <ResourceMetadataDescription Name="Headcount" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Headcounts/meta" Description="Custom Headcount (Assignable) entity" />
+  <ResourceMetadataDescription Name="Impediment" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Impediments/meta" Description="Anything that prevents a team member from working as efficiently as possible. Impediment can relate to Task, User Story, Bug or Feature." />
+  <ResourceMetadataDescription Name="InboundAssignable" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/InboundAssignables/meta" Description="Inbound relation for Assignable." />
+  <ResourceMetadataDescription Name="Incident" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Incidents/meta" Description="Custom Incident (Assignable) entity" />
+  <ResourceMetadataDescription Name="Indicator" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Indicators/meta" Description="Custom Indicator (Assignable) entity" />
+  <ResourceMetadataDescription Name="Involvement" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Involvements/meta" Description="Custom Involvement (Assignable) entity" />
+  <ResourceMetadataDescription Name="Iteration" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Iterations/meta" Description="A single iteration results in an increment(s) of product functionality. Iteration should relate to a Release." />
+  <ResourceMetadataDescription Name="IterationGoal" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/IterationGoals/meta" Description="Custom IterationGoal (Assignable) entity" />
+  <ResourceMetadataDescription Name="IterationGoalFeature" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/IterationGoalFeatures/meta" Description="Custom IterationGoalFeature entity" />
+  <ResourceMetadataDescription Name="JobFamily" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/JobFamilies/meta" Description="Custom JobFamily (Assignable) entity" />
+  <ResourceMetadataDescription Name="JobProfile" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/JobProfiles/meta" Description="Custom JobProfile (Assignable) entity" />
+  <ResourceMetadataDescription Name="KeyMilestone" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/KeyMilestones/meta" Description="Custom KeyMilestone (Assignable) entity" />
+  <ResourceMetadataDescription Name="KeyResult" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/KeyResults/meta" Description="Custom KeyResult (Assignable) entity" />
+  <ResourceMetadataDescription Name="KeyResultMeasurement" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/KeyResultMeasurements/meta" Description="Custom KeyResultMeasurement entity" />
+  <ResourceMetadataDescription Name="LeadingIndicator" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/LeadingIndicators/meta" Description="Custom LeadingIndicator (Assignable) entity" />
+  <ResourceMetadataDescription Name="Location" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Locations/meta" Description="Custom Location (Assignable) entity" />
+  <ResourceMetadataDescription Name="LongTermObjective" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/LongTermObjectives/meta" Description="Custom LongTermObjective (Assignable) entity" />
+  <ResourceMetadataDescription Name="Measurement" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Measurements/meta" Description="Custom Measurement (Assignable) entity" />
+  <ResourceMetadataDescription Name="Message" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Messages/meta" Description="Email message from email integration" />
+  <ResourceMetadataDescription Name="MessageUid" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/MessageUids/meta" Description="Represents reference to downloaded message" />
+  <ResourceMetadataDescription Name="MidTermObjective" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/MidTermObjectives/meta" Description="Custom MidTermObjective (Assignable) entity" />
+  <ResourceMetadataDescription Name="Milestone" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Milestones/meta" Description="Milestones for projects" />
+  <ResourceMetadataDescription Name="MilestoneProject" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/MilestoneProjects/meta" Description="Milestone assigned to a project" />
+  <ResourceMetadataDescription Name="MonthlyBudget" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/MonthlyBudgets/meta" Description="Custom MonthlyBudget (Assignable) entity" />
+  <ResourceMetadataDescription Name="MonthPeriod" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/MonthPeriods/meta" Description="Custom MonthPeriod (Assignable) entity" />
+  <ResourceMetadataDescription Name="MonthPeriodRate" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/MonthPeriodRates/meta" Description="Custom MonthPeriodRate entity" />
+  <ResourceMetadataDescription Name="Objective" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Objectives/meta" Description="Custom Objective (Assignable) entity" />
+  <ResourceMetadataDescription Name="ObjectiveBug" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/ObjectiveBugs/meta" Description="Custom ObjectiveBug entity" />
+  <ResourceMetadataDescription Name="ObjectiveEpic" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/ObjectiveEpics/meta" Description="Custom ObjectiveEpic entity" />
+  <ResourceMetadataDescription Name="ObjectiveFeature" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/ObjectiveFeatures/meta" Description="Custom ObjectiveFeature entity" />
+  <ResourceMetadataDescription Name="ObjectiveUserStory" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/ObjectiveUserStories/meta" Description="Custom ObjectiveUserStory entity" />
+  <ResourceMetadataDescription Name="OutboundAssignable" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/OutboundAssignables/meta" Description="Outbound relation for Assignable." />
+  <ResourceMetadataDescription Name="Overtime" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Overtimes/meta" Description="Custom Overtime (Assignable) entity" />
+  <ResourceMetadataDescription Name="Package" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Packages/meta" Description="Custom Package (Assignable) entity" />
+  <ResourceMetadataDescription Name="Period" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Periods/meta" Description="Custom Period (Assignable) entity" />
+  <ResourceMetadataDescription Name="PersonalTask" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/PersonalTasks/meta" Description="Custom PersonalTask (Assignable) entity" />
+  <ResourceMetadataDescription Name="PortfolioEpic" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/PortfolioEpics/meta" Description="A high-level scope of work which contains Epics and Features. Can be assigned to Release. Can't be assigned to Iteration." />
+  <ResourceMetadataDescription Name="PortfolioEpicAgileReleaseTrain" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/PortfolioEpicAgileReleaseTrains/meta" Description="Custom PortfolioEpicAgileReleaseTrain entity" />
+  <ResourceMetadataDescription Name="PortfolioEpicSolutionTrain" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/PortfolioEpicSolutionTrains/meta" Description="Custom PortfolioEpicSolutionTrain entity" />
+  <ResourceMetadataDescription Name="PortfolioEpicVehicle" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/PortfolioEpicVehicles/meta" Description="Custom PortfolioEpicVehicle entity" />
+  <ResourceMetadataDescription Name="Priority" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Priorities/meta" Description="Priority of User Story, Bug or Feature. Examples: Must Have, Nice to Have." />
+  <ResourceMetadataDescription Name="Process" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Processes/meta" Description="Set of practices, terms, workflows and custom fields that can be applied to Project." />
+  <ResourceMetadataDescription Name="Product" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Products/meta" Description="Custom Product (Assignable) entity" />
+  <ResourceMetadataDescription Name="ProductAgileReleaseTrain" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/ProductAgileReleaseTrains/meta" Description="Custom ProductAgileReleaseTrain entity" />
+  <ResourceMetadataDescription Name="ProductEpic" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/ProductEpics/meta" Description="Custom ProductEpic entity" />
+  <ResourceMetadataDescription Name="ProductPortfolioEpic" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/ProductPortfolioEpics/meta" Description="Custom ProductPortfolioEpic entity" />
+  <ResourceMetadataDescription Name="ProductRequest" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/ProductRequests/meta" Description="Custom ProductRequest entity" />
+  <ResourceMetadataDescription Name="ProductSolutionTrain" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/ProductSolutionTrains/meta" Description="Custom ProductSolutionTrain entity" />
+  <ResourceMetadataDescription Name="ProductVersion" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/ProductVersions/meta" Description="Custom ProductVersion (Assignable) entity" />
+  <ResourceMetadataDescription Name="ProductWaterfallProject" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/ProductWaterfallProjects/meta" Description="Custom ProductWaterfallProject entity" />
+  <ResourceMetadataDescription Name="Program" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Programs/meta" Description="Several Projects can be grouped into a Program." />
+  <ResourceMetadataDescription Name="ProgramPIObjective" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/ProgramPIObjectives/meta" Description="Custom ProgramPIObjective (Assignable) entity" />
+  <ResourceMetadataDescription Name="ProgramPIObjectiveFeature" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/ProgramPIObjectiveFeatures/meta" Description="Custom ProgramPIObjectiveFeature entity" />
+  <ResourceMetadataDescription Name="Project" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Projects/meta" Description="Core entity which contains Releases, Features, User Stories, Bugs, etc." />
+  <ResourceMetadataDescription Name="ProjectMember" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/ProjectMembers/meta" Description="Any User that is a part of a Project Team." />
+  <ResourceMetadataDescription Name="PublicHoliday" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/PublicHolidays/meta" Description="Custom PublicHoliday (Assignable) entity" />
+  <ResourceMetadataDescription Name="PublicHolidayLocation" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/PublicHolidayLocations/meta" Description="Custom PublicHolidayLocation entity" />
+  <ResourceMetadataDescription Name="QuarterlyBudget" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/QuarterlyBudgets/meta" Description="Custom QuarterlyBudget (Assignable) entity" />
+  <ResourceMetadataDescription Name="QuarterPeriod" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/QuarterPeriods/meta" Description="Custom QuarterPeriod (Assignable) entity" />
+  <ResourceMetadataDescription Name="Rate" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Rates/meta" Description="Custom Rate (Assignable) entity" />
+  <ResourceMetadataDescription Name="Relation" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Relations/meta" Description="Relation between two Entities." />
+  <ResourceMetadataDescription Name="RelationType" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/RelationTypes/meta" Description="Type of relation between Entities." />
+  <ResourceMetadataDescription Name="Release" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Releases/meta" Description="Delivering an increment(s) of product functionality to public. Release contains several Iterations." />
+  <ResourceMetadataDescription Name="ReleaseBug" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/ReleaseBugs/meta" Description="Custom ReleaseBug entity" />
+  <ResourceMetadataDescription Name="ReleaseFeature" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/ReleaseFeatures/meta" Description="Custom ReleaseFeature entity" />
+  <ResourceMetadataDescription Name="ReleaseProject" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/ReleaseProjects/meta" Description="Project assigned to a release" />
+  <ResourceMetadataDescription Name="ReleaseUserStory" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/ReleaseUserStories/meta" Description="Custom ReleaseUserStory entity" />
+  <ResourceMetadataDescription Name="Request" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Requests/meta" Description="Request can represent Idea, Issue or Question from users." />
+  <ResourceMetadataDescription Name="Requester" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Requesters/meta" Description="Represents a requester." />
+  <ResourceMetadataDescription Name="RequestType" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/RequestTypes/meta" Description="Type of request (Idea, Issue or Question)." />
+  <ResourceMetadataDescription Name="RequestVehicle" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/RequestVehicles/meta" Description="Custom RequestVehicle entity" />
+  <ResourceMetadataDescription Name="Requirement" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Requirements/meta" Description="Custom Requirement (Assignable) entity" />
+  <ResourceMetadataDescription Name="RequirementEpic" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/RequirementEpics/meta" Description="Custom RequirementEpic entity" />
+  <ResourceMetadataDescription Name="RequirementFeature" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/RequirementFeatures/meta" Description="Custom RequirementFeature entity" />
+  <ResourceMetadataDescription Name="RequirementPortfolioEpic" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/RequirementPortfolioEpics/meta" Description="Custom RequirementPortfolioEpic entity" />
+  <ResourceMetadataDescription Name="RequirementRequest" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/RequirementRequests/meta" Description="Custom RequirementRequest entity" />
+  <ResourceMetadataDescription Name="RequirementWaterfallProject" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/RequirementWaterfallProjects/meta" Description="Custom RequirementWaterfallProject entity" />
+  <ResourceMetadataDescription Name="Retrospective" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Retrospectives/meta" Description="Custom Retrospective (Assignable) entity" />
+  <ResourceMetadataDescription Name="Revision" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Revisions/meta" Description="A single commit into repository. Contains a set of source files." />
+  <ResourceMetadataDescription Name="RevisionFile" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/RevisionFiles/meta" Description="A source file included to Revision." />
+  <ResourceMetadataDescription Name="Risk" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Risks/meta" Description="Custom Risk (Assignable) entity" />
+  <ResourceMetadataDescription Name="RiskAction" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/RiskActions/meta" Description="Custom RiskAction (Assignable) entity" />
+  <ResourceMetadataDescription Name="Role" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Roles/meta" Description="Defines permissions for User." />
+  <ResourceMetadataDescription Name="RoleEffort" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/RoleEfforts/meta" Description="Effort for Assignable by Role. For example, User Story can have 5 hours of Developer effort + 3 hours of Tester effort. The total effort will be 8 hours." />
+  <ResourceMetadataDescription Name="RoleEntityType" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/RoleEntityTypes/meta" Description="Defines Role permissions for Entities." />
+  <ResourceMetadataDescription Name="RoleEntityTypeProcessSetting" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/RoleEntityTypeProcessSettings/meta" Description="Describe if role can be assigned to entity type in process" />
+  <ResourceMetadataDescription Name="Severity" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Severities/meta" Description="Severity (badness) of Bug. For example, Blocking, Critical, Small." />
+  <ResourceMetadataDescription Name="ShortTermObjective" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/ShortTermObjectives/meta" Description="Custom ShortTermObjective (Assignable) entity" />
+  <ResourceMetadataDescription Name="SickLeave" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/SickLeaves/meta" Description="Custom SickLeave (Assignable) entity" />
+  <ResourceMetadataDescription Name="Skill" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Skills/meta" Description="Custom Skill (Assignable) entity" />
+  <ResourceMetadataDescription Name="Solution" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Solutions/meta" Description="Custom Solution (Assignable) entity" />
+  <ResourceMetadataDescription Name="SolutionPortfolioEpic" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/SolutionPortfolioEpics/meta" Description="Custom SolutionPortfolioEpic entity" />
+  <ResourceMetadataDescription Name="SolutionProduct" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/SolutionProducts/meta" Description="Custom SolutionProduct entity" />
+  <ResourceMetadataDescription Name="SolutionTrain" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/SolutionTrains/meta" Description="Custom SolutionTrain (Assignable) entity" />
+  <ResourceMetadataDescription Name="SolutionTrainProgramincrement" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/SolutionTrainProgramincrements/meta" Description="Custom SolutionTrainProgramincrement (Assignable) entity" />
+  <ResourceMetadataDescription Name="SolutionVersion" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/SolutionVersions/meta" Description="Custom SolutionVersion (Assignable) entity" />
+  <ResourceMetadataDescription Name="SolutionVersionProductVersion" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/SolutionVersionProductVersions/meta" Description="Custom SolutionVersionProductVersion entity" />
+  <ResourceMetadataDescription Name="SolutionWaterfallProject" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/SolutionWaterfallProjects/meta" Description="Custom SolutionWaterfallProject entity" />
+  <ResourceMetadataDescription Name="StatusReport" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/StatusReports/meta" Description="Custom StatusReport (Assignable) entity" />
+  <ResourceMetadataDescription Name="StrategicObjective" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/StrategicObjectives/meta" Description="Custom StrategicObjective (Assignable) entity" />
+  <ResourceMetadataDescription Name="StrategicObjectiveEpic" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/StrategicObjectiveEpics/meta" Description="Custom StrategicObjectiveEpic entity" />
+  <ResourceMetadataDescription Name="StrategicObjectivePortfolioEpic" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/StrategicObjectivePortfolioEpics/meta" Description="Custom StrategicObjectivePortfolioEpic entity" />
+  <ResourceMetadataDescription Name="StrategicObjectiveRequest" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/StrategicObjectiveRequests/meta" Description="Custom StrategicObjectiveRequest entity" />
+  <ResourceMetadataDescription Name="TacticalObjective" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/TacticalObjectives/meta" Description="Custom TacticalObjective (Assignable) entity" />
+  <ResourceMetadataDescription Name="TacticalObjectiveBug" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/TacticalObjectiveBugs/meta" Description="Custom TacticalObjectiveBug entity" />
+  <ResourceMetadataDescription Name="TacticalObjectiveFeature" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/TacticalObjectiveFeatures/meta" Description="Custom TacticalObjectiveFeature entity" />
+  <ResourceMetadataDescription Name="TacticalObjectiveUserStory" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/TacticalObjectiveUserStories/meta" Description="Custom TacticalObjectiveUserStory entity" />
+  <ResourceMetadataDescription Name="Tag" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Tags/meta" Description="Tags that can be attached to entities." />
+  <ResourceMetadataDescription Name="Task" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Tasks/meta" Description="A small chunk of work, typically less than 16 hours. Task must relate to User Story. It is not possible to create Tasks without User Story." />
+  <ResourceMetadataDescription Name="Team" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Teams/meta" Description="Group of people working on some projects." />
+  <ResourceMetadataDescription Name="TeamAssignment" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/TeamAssignments/meta" Description="Assignment of the Team with a specific State on Assignable. Known as TeamState." />
+  <ResourceMetadataDescription Name="TeamIteration" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/TeamIterations/meta" Description="A single iteration results in an increment(s) of product functionality. Team iteration should relate to a Team." />
+  <ResourceMetadataDescription Name="TeamIterationBug" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/TeamIterationBugs/meta" Description="Custom TeamIterationBug entity" />
+  <ResourceMetadataDescription Name="TeamIterationFeature" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/TeamIterationFeatures/meta" Description="Custom TeamIterationFeature entity" />
+  <ResourceMetadataDescription Name="TeamIterationUserStory" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/TeamIterationUserStories/meta" Description="Custom TeamIterationUserStory entity" />
+  <ResourceMetadataDescription Name="TeamMember" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/TeamMembers/meta" Description="Any User that is a part of a Team." />
+  <ResourceMetadataDescription Name="TeamPIObjective" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/TeamPIObjectives/meta" Description="Custom TeamPIObjective (Assignable) entity" />
+  <ResourceMetadataDescription Name="TeamPIObjectiveBug" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/TeamPIObjectiveBugs/meta" Description="Custom TeamPIObjectiveBug entity" />
+  <ResourceMetadataDescription Name="TeamPIObjectiveFeature" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/TeamPIObjectiveFeatures/meta" Description="Custom TeamPIObjectiveFeature entity" />
+  <ResourceMetadataDescription Name="TeamPIObjectiveUserStory" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/TeamPIObjectiveUserStories/meta" Description="Custom TeamPIObjectiveUserStory entity" />
+  <ResourceMetadataDescription Name="TeamProject" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/TeamProjects/meta" Description="Any Project in which team participates." />
+  <ResourceMetadataDescription Name="Term" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Terms/meta" Description="Beta version: Term in Process. Like Bug, User Story, Feature, etc." />
+  <ResourceMetadataDescription Name="TestCase" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/TestCases/meta" Description="A set of steps to determine if a product functionality is working correctly. TestCase relates to User Story." />
+  <ResourceMetadataDescription Name="TestCaseRun" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/TestCaseRuns/meta" Description="A single Test Case Run. TestCase can be run many times. It is impossible to create a Test Case Run, instead Add Test Case to Test Plan to create a Test Case Run" />
+  <ResourceMetadataDescription Name="TestPlan" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/TestPlans/meta" Description="A group of TestCases. For example, you can create 'Smoke Tests' TestPlan and add TestCases there." />
+  <ResourceMetadataDescription Name="TestPlanRun" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/TestPlanRuns/meta" Description="A single TestPlan Run. TestPlan can have multiple runs by various Iterations, Releases or Builds." />
+  <ResourceMetadataDescription Name="TestRunItemHierarchyLink" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/TestRunItemHierarchyLinks/meta" Description="Link between test plan run and test case run. In hierarchical test plan runs each test case run is linked to all parent test plan runs" />
+  <ResourceMetadataDescription Name="TestStep" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/TestSteps/meta" Description="Single Step of Test Case" />
+  <ResourceMetadataDescription Name="TestStepRun" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/TestStepRuns/meta" Description="A single Test Step Run" />
+  <ResourceMetadataDescription Name="Time" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Times/meta" Description="Spent/Remaining time for Assignable (Task, User Story, Bug, etc.)." />
+  <ResourceMetadataDescription Name="TimeRecord" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/TimeRecords/meta" Description="Custom TimeRecord (Assignable) entity" />
+  <ResourceMetadataDescription Name="Timesheet" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Timesheets/meta" Description="Custom Timesheet (Assignable) entity" />
+  <ResourceMetadataDescription Name="UltimateObjective" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/UltimateObjectives/meta" Description="Custom UltimateObjective (Assignable) entity" />
+  <ResourceMetadataDescription Name="UltimateObjectivePortfolioEpic" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/UltimateObjectivePortfolioEpics/meta" Description="Custom UltimateObjectivePortfolioEpic entity" />
+  <ResourceMetadataDescription Name="User" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Users/meta" Description="Represents an user. User has Role and can be added to project teams." />
+  <ResourceMetadataDescription Name="UserStory" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/UserStories/meta" Description="A statement of end user requirements in a couple of sentences. User Story can be assigned to Iteration or Release." />
+  <ResourceMetadataDescription Name="Vacation" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Vacations/meta" Description="Custom Vacation (Assignable) entity" />
+  <ResourceMetadataDescription Name="ValueStream" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/ValueStreams/meta" Description="Custom ValueStream (Assignable) entity" />
+  <ResourceMetadataDescription Name="ValueStreamPortfolioEpic" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/ValueStreamPortfolioEpics/meta" Description="Custom ValueStreamPortfolioEpic entity" />
+  <ResourceMetadataDescription Name="ValueStreamWaterfallProject" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/ValueStreamWaterfallProjects/meta" Description="Custom ValueStreamWaterfallProject entity" />
+  <ResourceMetadataDescription Name="Vehicle" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Vehicles/meta" Description="Custom Vehicle (Assignable) entity" />
+  <ResourceMetadataDescription Name="Vendor" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Vendors/meta" Description="Custom Vendor (Assignable) entity" />
+  <ResourceMetadataDescription Name="Vote" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Votes/meta" Description="Custom Vote (Assignable) entity" />
+  <ResourceMetadataDescription Name="WaterfallProgram" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/WaterfallPrograms/meta" Description="Custom WaterfallProgram (Assignable) entity" />
+  <ResourceMetadataDescription Name="WaterfallProject" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/WaterfallProjects/meta" Description="Custom WaterfallProject (Assignable) entity" />
+  <ResourceMetadataDescription Name="WaterfallProjectStrategicObjective" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/WaterfallProjectStrategicObjectives/meta" Description="Custom WaterfallProjectStrategicObjective entity" />
+  <ResourceMetadataDescription Name="WaterfallProjectTask" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/WaterfallProjectTasks/meta" Description="Custom WaterfallProjectTask (Assignable) entity" />
+  <ResourceMetadataDescription Name="WaterfallProjectUltimateObjective" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/WaterfallProjectUltimateObjectives/meta" Description="Custom WaterfallProjectUltimateObjective entity" />
+  <ResourceMetadataDescription Name="WaterfallProjectVehicle" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/WaterfallProjectVehicles/meta" Description="Custom WaterfallProjectVehicle entity" />
+  <ResourceMetadataDescription Name="WeekPeriod" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/WeekPeriods/meta" Description="Custom WeekPeriod (Assignable) entity" />
+  <ResourceMetadataDescription Name="WorkAllocation" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/WorkAllocations/meta" Description="Custom WorkAllocation (Assignable) entity" />
+  <ResourceMetadataDescription Name="WorkAllocationAvailability" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/WorkAllocationAvailabilities/meta" Description="Custom WorkAllocationAvailability entity" />
+  <ResourceMetadataDescription Name="WorkAllocationMonthPeriod" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/WorkAllocationMonthPeriods/meta" Description="Custom WorkAllocationMonthPeriod entity" />
+  <ResourceMetadataDescription Name="WorkAllocationPeriod" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/WorkAllocationPeriods/meta" Description="Custom WorkAllocationPeriod entity" />
+  <ResourceMetadataDescription Name="WorkAllocationQuarterPeriod" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/WorkAllocationQuarterPeriods/meta" Description="Custom WorkAllocationQuarterPeriod entity" />
+  <ResourceMetadataDescription Name="WorkAllocationWeekPeriod" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/WorkAllocationWeekPeriods/meta" Description="Custom WorkAllocationWeekPeriod entity" />
+  <ResourceMetadataDescription Name="WorkAllocationYearPeriod" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/WorkAllocationYearPeriods/meta" Description="Custom WorkAllocationYearPeriod entity" />
+  <ResourceMetadataDescription Name="Workflow" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/Workflows/meta" Description="Set of states" />
+  <ResourceMetadataDescription Name="YearPeriod" Uri="https://cprimedgonzalesdemo.tpondemand.com/api/v1/YearPeriods/meta" Description="Custom YearPeriod (Assignable) entity" />
+</ResourceMetadataDescriptionIndex>
