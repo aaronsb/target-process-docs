@@ -10,22 +10,32 @@ async function scrapeApiMetadata(siteUrl) {
     try {
         const siteName = new URL(siteUrl).hostname.split('.')[0];
         console.log(`Scraping API metadata from ${siteUrl}...`);
-        
-        // Create directory structure
+
+        // Create directory structure - both in legacy and generated locations
         const siteDir = path.join('api-docs', siteName);
+        const generatedSiteDir = path.join('generated/api-docs', siteName);
         const resourcesDir = path.join(siteDir, 'resources');
+        const generatedResourcesDir = path.join(generatedSiteDir, 'resources');
         const markdownDir = path.join(siteDir, 'markdown');
-        
+        const generatedMarkdownDir = path.join(generatedSiteDir, 'markdown');
+
+        // Create all directories
         await fs.mkdir(resourcesDir, { recursive: true });
+        await fs.mkdir(generatedResourcesDir, { recursive: true });
         await fs.mkdir(markdownDir, { recursive: true });
+        await fs.mkdir(generatedMarkdownDir, { recursive: true });
         
         // Fetch the API metadata index
         const metaUrl = new URL('/api/v1/index/meta', siteUrl).toString();
         const metaResponse = await got(metaUrl);
         
-        // Save raw metadata
+        // Save raw metadata to both locations
         await fs.writeFile(
             path.join(siteDir, 'index-meta.xml'),
+            metaResponse.body
+        );
+        await fs.writeFile(
+            path.join(generatedSiteDir, 'index-meta.xml'),
             metaResponse.body
         );
         
@@ -33,16 +43,25 @@ async function scrapeApiMetadata(siteUrl) {
         const result = await promisifyXmlParse(metaResponse.body);
         const resources = result.ResourceMetadataDescriptionIndex.ResourceMetadataDescription;
         
-        // Save JSON version for easier processing
+        // Save JSON version for easier processing to both locations
         await fs.writeFile(
             path.join(siteDir, 'index-meta.json'),
             JSON.stringify(resources, null, 2)
         );
+        await fs.writeFile(
+            path.join(generatedSiteDir, 'index-meta.json'),
+            JSON.stringify(resources, null, 2)
+        );
         
-        // Generate index markdown
+        // Generate index markdown to both locations
+        const indexMarkdown = generateIndexMarkdown(resources, siteUrl);
         await fs.writeFile(
             path.join(markdownDir, 'index.md'),
-            generateIndexMarkdown(resources, siteUrl)
+            indexMarkdown
+        );
+        await fs.writeFile(
+            path.join(generatedMarkdownDir, 'index.md'),
+            indexMarkdown
         );
         
         // Fetch detailed metadata for each resource
@@ -85,30 +104,44 @@ function promisifyXmlParse(xml) {
 async function scrapeResourceMetadata(resource, siteDir, siteUrl) {
     const resourceName = resource.$.Name;
     const resourceUri = resource.$.Uri;
+    const generatedSiteDir = path.join('generated/api-docs', new URL(siteUrl).hostname.split('.')[0]);
     
     try {
         // Fetch detailed metadata
         const response = await got(resourceUri);
         
-        // Save raw metadata
+        // Save raw metadata to both locations
         await fs.writeFile(
             path.join(siteDir, 'resources', `${resourceName}.xml`),
+            response.body
+        );
+        await fs.writeFile(
+            path.join(generatedSiteDir, 'resources', `${resourceName}.xml`),
             response.body
         );
         
         // Parse XML
         const result = await promisifyXmlParse(response.body);
         
-        // Save JSON version
+        // Save JSON version to both locations
         await fs.writeFile(
             path.join(siteDir, 'resources', `${resourceName}.json`),
             JSON.stringify(result, null, 2)
         );
+        await fs.writeFile(
+            path.join(generatedSiteDir, 'resources', `${resourceName}.json`),
+            JSON.stringify(result, null, 2)
+        );
         
-        // Generate markdown documentation
+        // Generate markdown documentation for both locations
+        const markdown = generateResourceMarkdown(result, resourceName, resource.$.Description);
         await fs.writeFile(
             path.join(siteDir, 'markdown', `${resourceName}.md`),
-            generateResourceMarkdown(result, resourceName, resource.$.Description)
+            markdown
+        );
+        await fs.writeFile(
+            path.join(generatedSiteDir, 'markdown', `${resourceName}.md`),
+            markdown
         );
         
     } catch (error) {

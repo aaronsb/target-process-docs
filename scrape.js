@@ -45,13 +45,16 @@ async function fetchAndConvert(url) {
         const urlPath = new URL(url).pathname;
         const relativePath = urlPath.replace('/docs/', '');
         const outputPath = path.join('docs', `${relativePath || 'index'}.md`);
+        const generatedOutputPath = path.join('generated/dev-docs', `${relativePath || 'index'}.md`);
         
-        // Ensure directory exists
+        // Ensure directories exist
         await fs.mkdir(path.dirname(outputPath), { recursive: true });
+        await fs.mkdir(path.dirname(generatedOutputPath), { recursive: true });
         
-        // Save markdown file
+        // Save markdown file to both locations
         await fs.writeFile(outputPath, markdown);
-        console.log(`Saved ${outputPath}`);
+        await fs.writeFile(generatedOutputPath, markdown);
+        console.log(`Saved ${outputPath} and ${generatedOutputPath}`);
         
         // Find and process links to other doc pages
         const links = $('a[href^="/docs/"]')

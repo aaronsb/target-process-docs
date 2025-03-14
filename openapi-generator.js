@@ -4,20 +4,32 @@ import path from 'path';
 
 async function generateOpenApiSpec(siteName) {
     console.log(`Generating OpenAPI specification for ${siteName}...`);
-    
+
     try {
+        // Use both legacy and generated paths
         const siteDir = path.join('api-docs', siteName);
+        const generatedSiteDir = path.join('generated/api-docs', siteName);
         const resourcesDir = path.join(siteDir, 'resources');
-        
-        // Verify the resources directory exists
+        const generatedResourcesDir = path.join(generatedSiteDir, 'resources');
+
+        // Verify the resources directory exists (check both locations)
+        let useGeneratedPath = false;
         try {
             await fs.access(resourcesDir);
         } catch (error) {
-            throw new Error(`Resources directory not found for site ${siteName}. Please run the API scraper first.`);
+            try {
+                await fs.access(generatedResourcesDir);
+                useGeneratedPath = true;
+            } catch (error2) {
+                throw new Error(`Resources directory not found for site ${siteName}. Please run the API scraper first.`);
+            }
         }
+
+        // Read the index metadata from the appropriate location
+        const indexMetadataPath = useGeneratedPath 
+            ? path.join(generatedSiteDir, 'index-meta.json')
+            : path.join(siteDir, 'index-meta.json');
         
-        // Read the index metadata
-        const indexMetadataPath = path.join(siteDir, 'index-meta.json');
         let indexMetadata;
         try {
             indexMetadata = JSON.parse(
@@ -92,13 +104,30 @@ async function generateOpenApiSpec(siteName) {
             }
         }
         
-        // Save OpenAPI specification
+        // Save OpenAPI specification to both locations
+        const openApiJson = JSON.stringify(openApiSpec, null, 2);
         await fs.writeFile(
             path.join(siteDir, 'openapi.json'),
-            JSON.stringify(openApiSpec, null, 2)
+            openApiJson
         );
         
-        console.log(`OpenAPI specification generated at ${path.join(siteDir, 'openapi.json')}`);
+        // Also save to generated directory
+        await fs.writeFile(
+            path.join(generatedSiteDir, 'openapi.json'),
+            openApiJson
+        );
+        
+        // Also save to the central openapi directory
+        await fs.mkdir(path.join('generated', 'openapi'), { recursive: true });
+        await fs.writeFile(
+            path.join('generated', 'openapi', `${siteName}-openapi.json`),
+            openApiJson
+        );
+        
+        console.log(`OpenAPI specification generated at multiple locations:`);
+        console.log(`- ${path.join(siteDir, 'openapi.json')}`);
+        console.log(`- ${path.join(generatedSiteDir, 'openapi.json')}`);
+        console.log(`- ${path.join('generated', 'openapi', `${siteName}-openapi.json`)}`);
         return openApiSpec;
     } catch (error) {
         console.error('Error generating OpenAPI specification:', error);
