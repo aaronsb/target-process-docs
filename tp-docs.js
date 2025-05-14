@@ -354,6 +354,14 @@ async function main() {
     console.log(`  └── visualization/: Visualization assets`);
     
     if (success) {
+      console.log('\n🔍 Search your documentation:');
+      console.log('  npm run search "search term"');
+      console.log('  or');
+      console.log('  node search-docs.js "search term"');
+      console.log('  (Use --help for more options)');
+    }
+    
+    if (success) {
       console.log('\n✅ All requested operations completed successfully!');
     } else {
       console.log('\n⚠️ Some operations encountered issues. See logs above for details.');

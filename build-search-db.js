@@ -6,6 +6,7 @@ import path from 'path';
 // Define directory structure
 const GENERATED_DIR = 'generated';
 const DEV_DOCS_DIR = path.join(GENERATED_DIR, 'dev-docs');
+const API_DOCS_DIR = 'api-docs';
 const DATABASE_DIR = path.join(GENERATED_DIR, 'database');
 const DATABASE_PATH = path.join(DATABASE_DIR, 'docs.db');
 
@@ -199,19 +200,19 @@ async function processAllFiles(db) {
     // Ensure dev docs directory exists
     await fs.mkdir(DEV_DOCS_DIR, { recursive: true });
     
-    const files = await fs.readdir(DEV_DOCS_DIR);
-    const markdownFiles = files.filter(file => file.endsWith('.md'));
-
-    console.log(`Found ${markdownFiles.length} markdown files to process...`);
-    
     // Prepare batch arrays
     const docsToInsert = [];
     const sectionsToInsert = [];
     const relationshipsToInsert = [];
     const keywordsToProcess = [];
     
-    // Process each file
-    for (const file of markdownFiles) {
+    // 1. Process general documentation
+    const devFiles = await fs.readdir(DEV_DOCS_DIR);
+    const devMarkdownFiles = devFiles.filter(file => file.endsWith('.md'));
+    console.log(`Found ${devMarkdownFiles.length} general documentation markdown files to process...`);
+    
+    // Process each general doc file
+    for (const file of devMarkdownFiles) {
         const filePath = path.join(DEV_DOCS_DIR, file);
         try {
             const content = await fs.readFile(filePath, 'utf-8');
@@ -222,27 +223,27 @@ async function processAllFiles(db) {
             
             // Add document to batch
             docsToInsert.push({
-                path: relativePath,
+                path: `dev-docs/${relativePath}`,
                 content: content,
                 title: title,
-                tags: '',
+                tags: 'general',
                 section_path: sections.map(s => s.title).join(' > ')
             });
             
             // Extract document keywords
             const docCategories = extractCategories(content);
             keywordsToProcess.push({
-                nodeId: relativePath,
+                nodeId: `dev-docs/${relativePath}`,
                 categories: docCategories
             });
             
             // Process sections
             for (const section of sections) {
-                const sectionId = `${relativePath}#${section.title.toLowerCase().replace(/\s+/g, '-')}`;
+                const sectionId = `dev-docs/${relativePath}#${section.title.toLowerCase().replace(/\s+/g, '-')}`;
                 
                 // Add section to batch
                 sectionsToInsert.push({
-                    doc_path: relativePath,
+                    doc_path: `dev-docs/${relativePath}`,
                     section_id: sectionId,
                     title: section.title,
                     content: section.content,
@@ -262,26 +263,26 @@ async function processAllFiles(db) {
             // Add relationships to batch
             for (const link of links) {
                 relationshipsToInsert.push({
-                    source_id: relativePath,
-                    target_id: link.target,
+                    source_id: `dev-docs/${relativePath}`,
+                    target_id: `dev-docs/${link.target}`,
                     relationship_type: 'link'
                 });
             }
             
             // Add document-section relationships
             for (const section of sections) {
-                const sectionId = `${relativePath}#${section.title.toLowerCase().replace(/\s+/g, '-')}`;
+                const sectionId = `dev-docs/${relativePath}#${section.title.toLowerCase().replace(/\s+/g, '-')}`;
                 
                 // Create bidirectional relationships between document and its sections
                 relationshipsToInsert.push({
-                    source_id: relativePath,
+                    source_id: `dev-docs/${relativePath}`,
                     target_id: sectionId,
                     relationship_type: 'category'
                 });
                 
                 relationshipsToInsert.push({
                     source_id: sectionId,
-                    target_id: relativePath,
+                    target_id: `dev-docs/${relativePath}`,
                     relationship_type: 'category'
                 });
             }
@@ -291,6 +292,115 @@ async function processAllFiles(db) {
             console.error(`\nError processing ${file}:`, error);
         }
     }
+    
+    // 2. Process API documentation if it exists
+    try {
+        const apiSites = await fs.readdir(API_DOCS_DIR);
+        
+        for (const site of apiSites) {
+            const apiMarkdownDir = path.join(API_DOCS_DIR, site, 'markdown');
+            
+            try {
+                // Check if the markdown directory exists
+                await fs.access(apiMarkdownDir);
+                
+                const apiFiles = await fs.readdir(apiMarkdownDir);
+                const apiMarkdownFiles = apiFiles.filter(file => file.endsWith('.md'));
+                console.log(`\nFound ${apiMarkdownFiles.length} API documentation files for site ${site}...`);
+                
+                // Process each API doc file
+                for (const file of apiMarkdownFiles) {
+                    const filePath = path.join(apiMarkdownDir, file);
+                    try {
+                        const content = await fs.readFile(filePath, 'utf-8');
+                        const relativePath = path.join(site, 'markdown', file);
+                        const title = extractTitle(content) || file.replace('.md', '');
+                        const links = findInternalLinks(content);
+                        const sections = extractSections(content);
+                        
+                        // Add document to batch
+                        docsToInsert.push({
+                            path: `api-docs/${relativePath}`,
+                            content: content,
+                            title: title,
+                            tags: `api,${site}`,
+                            section_path: sections.map(s => s.title).join(' > ')
+                        });
+                        
+                        // Extract document keywords
+                        const docCategories = extractCategories(content);
+                        keywordsToProcess.push({
+                            nodeId: `api-docs/${relativePath}`,
+                            categories: docCategories
+                        });
+                        
+                        // Process sections
+                        for (const section of sections) {
+                            const sectionId = `api-docs/${relativePath}#${section.title.toLowerCase().replace(/\s+/g, '-')}`;
+                            
+                            // Add section to batch
+                            sectionsToInsert.push({
+                                doc_path: `api-docs/${relativePath}`,
+                                section_id: sectionId,
+                                title: section.title,
+                                content: section.content,
+                                level: section.level,
+                                parent_id: section.parent_id,
+                                section_path: section.section_path
+                            });
+                            
+                            // Extract section keywords
+                            const sectionCategories = extractCategories(section.title + ' ' + section.content);
+                            keywordsToProcess.push({
+                                nodeId: sectionId,
+                                categories: sectionCategories
+                            });
+                        }
+                        
+                        // Add relationships to batch
+                        for (const link of links) {
+                            relationshipsToInsert.push({
+                                source_id: `api-docs/${relativePath}`,
+                                target_id: `api-docs/${path.join(site, 'markdown', link.target)}`,
+                                relationship_type: 'link'
+                            });
+                        }
+                        
+                        // Add document-section relationships
+                        for (const section of sections) {
+                            const sectionId = `api-docs/${relativePath}#${section.title.toLowerCase().replace(/\s+/g, '-')}`;
+                            
+                            // Create bidirectional relationships between document and its sections
+                            relationshipsToInsert.push({
+                                source_id: `api-docs/${relativePath}`,
+                                target_id: sectionId,
+                                relationship_type: 'category'
+                            });
+                            
+                            relationshipsToInsert.push({
+                                source_id: sectionId,
+                                target_id: `api-docs/${relativePath}`,
+                                relationship_type: 'category'
+                            });
+                        }
+                        
+                        process.stdout.write('.');
+                    } catch (error) {
+                        console.error(`\nError processing API file ${file}:`, error);
+                    }
+                }
+            } catch (error) {
+                // Skip if site doesn't have markdown directory
+                console.log(`\nNo markdown directory found for site ${site}`);
+            }
+        }
+    } catch (error) {
+        console.log(`\nNo API documentation found or error accessing it: ${error.message}`);
+    }
+    
+    // Log total files to be inserted
+    console.log(`\nTotal documents to insert: ${docsToInsert.length}`);
+    console.log(`Total sections to insert: ${sectionsToInsert.length}`);
     
     console.log('\nInserting data into database...');
     

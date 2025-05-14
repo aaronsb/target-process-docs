@@ -82,6 +82,35 @@ The visualization tool provides an interactive 3D graph of documentation relatio
 - Nodes are color-coded by category
 - You can filter, search, and interact with the graph
 
+### Search Tool
+
+The search tool provides a command-line interface for searching the documentation database:
+- Full-text search of documents and sections
+- Filter results by category
+- View context around matches
+- Limit number of results
+- Exact phrase matching
+
+```bash
+# Basic search
+node search-docs.js "user story"
+
+# Search only in documents
+node search-docs.js -t docs "api"
+
+# Filter by category
+node search-docs.js -c feature "epic"
+
+# Exact phrase matching
+node search-docs.js -e "acceptance criteria"
+
+# List available categories
+node search-docs.js --list-categories
+
+# Get help
+node search-docs.js --help
+```
+
 ## NPM Scripts
 
 ```bash
@@ -91,6 +120,7 @@ npm run build-search # Build the search database
 npm run visualize    # Generate visualization
 npm run api-scrape   # Run the site-specific API scraper (requires --site param)
 npm run generate-openapi # Generate OpenAPI spec (requires --site param)
+npm run search       # Search the documentation database
 ```
 
 ## Notes

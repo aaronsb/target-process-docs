@@ -1,5 +1,16 @@
 # Generated content
 generated/
+api-docs/
+sqlite3
+search
+
+# Databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Environment variables
+.env
 
 # Dependencies
 node_modules/
@@ -7,6 +18,9 @@ package-lock.json
 
 # OS files
 .DS_Store
+Thumbs.db
 
 # Editor files
 .obsidian/
+.vscode/
+.idea/
